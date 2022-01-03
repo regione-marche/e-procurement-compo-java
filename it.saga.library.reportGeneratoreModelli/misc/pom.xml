@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <distributionManagement>
+        <repository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>nexus</id>
+            <name>nexus maggioli</name>
+            <url>http://nexus.maggioli.it:8081/repository/snapshots</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>it.maggioli</groupId>
+    <artifactId>grammarSourceGeneration</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <organization>
+        <name>Maggioli s.p.a.</name>
+        <url>http://www.maggioli.it</url>
+    </organization>
+
+    <properties>
+        <maven.compiler.source>1.6</maven.compiler.source>
+        <maven.compiler.target>1.6</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>clean-tokens</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <delete>
+                                    <fileset dir="${basedir}/../src/RPA-server/server/src/main/java/" includes="*.tokens"/>
+                                </delete>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>replace-antlr4-files-imports</id>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <echo>Replace imports</echo>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaLexer.java"
+                                               match="import org.antlr."
+                                               replace="import it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaParser.java"
+                                               match="org.antlr."
+                                               replace="it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaParserBaseListener.java"
+                                               match="org.antlr."
+                                               replace="it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaParserBaseVisitor.java"
+                                               match="org.antlr."
+                                               replace="it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaParserListener.java"
+                                               match="org.antlr."
+                                               replace="it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                                <replaceregexp file="${basedir}/../src/RPA-server/server/src/main/java/it/saga/library/reportGeneratoreModelli/compositore/generatedGrammarFiles/RpaParserVisitor.java"
+                                               match="org.antlr."
+                                               replace="it.saga.extern.rpa_libs.antlr."
+                                               byline="true"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.5</version>
+                <configuration>
+                    <visitor>true</visitor>
+                    <outputDirectory>${basedir}/../src/RPA-server/server/src/main/java/</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <id>generate-antlr-sources</id>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

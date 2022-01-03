@@ -1,0 +1,122 @@
+lexer grammar CompoLexer;
+
+
+LOGICOP
+        : OR
+        | AND
+        ;
+MATHOP
+        : MUL
+        | DIV
+        | SUB
+        | ADD
+        | EXP
+        ;
+MATHFUNC
+        : SQRT
+        | SQR
+        | COS
+        | SEN
+        | TAN
+        | LN
+        | LOG
+        | ABS
+        ;
+COMPAREOP
+        : EQ
+        | NE
+        | GT
+        | GE
+        | LT
+        | LE
+        ;
+
+fragment UCASE       : [A-Z];
+fragment LETTER      : [a-zA-Z];
+WS          : ' ';
+COMMA       : ',';
+SQPARO      : '[';
+SQPARC      : ']';
+IDENTIFIER  : UCASE+ '_'? UCASE+;
+IF          : '[IF]';
+ELSE        : '[ELSE]';
+ENDIF       : '[ENDIF]';
+FOR         : '[FOR]';
+NEXT        : '[NEXT]';
+BREAK       : '[BREAK_LOOP]';
+WORD        : LETTER+;
+PLUS        : '+';
+UINT        : [0-9]+;
+/*WHITESPACE  : ' ' -> skip;*/
+COMMENT     : '@' .*? NEWLINE -> skip;
+NEWLINE     : '\r'?'\n';
+HASH        : '#';
+USCORE      : '_';
+INDEX       : '(' (UINT | UCASE+) ')';
+
+FMTSUB      : 'A' UINT ('.' UINT)?;
+FMTSUBNN    : 'A' '(' UINT ':' UINT ')';
+FMTSPLIT    : 'T.' UINT;
+FMTONELINE  : 'T';
+FMTELLIPS   : 'L' '(' UINT (':' UINT)? ')';
+FMTTRUNC    : 'I' UINT;
+FMTROUND    : 'P' UINT;
+FMTEURO     : 'E' UINT;
+FMTMAXLEN   : 'N' UINT;
+FMTLEFTPAD  : 'Z' UINT;
+FMTRIGHTPAD : 'F' UINT '.' UINT;
+FMTDATETOSTR: 'D';
+FMTLIRE     : 'U' UINT;
+FMTCEIL     : 'C' UINT;
+
+CONVNUMTOLETTERS            : '.L';
+CONVNUMTOLETTERSNODECIMAL   : '.LN';
+CONVHOURTOLETTERS           : '.LO';
+ASNUMBER    : '.N';
+NODOMAIN    : '.X';
+DOMMONEY    : '{MONEY}';
+DOMMONEYPOS : '{MONEYPOS}';
+DOMTEL      : '{TEL}';
+DOMTELALL   : '{TELALL}';
+DOMFAX      : '{FAX}';
+DOMFAXALL   : '{FAXALL}';
+DOMSN       : '{SN}';
+DOMKMCIPPO  : '{KM_CIPPO}';
+DOMTIPSS    : '{TIP_SS}';
+DOMCODSS    : '{COD_SS}';
+DOMNUMSS    : '{NUMSS}';
+DOMPROGUFF  : '{PROG_UFF}';
+DOMPROGCIP  : '{PROG_CIP}';
+DOMPROGREL  : '{PROG_REL}';
+DOMPROGRIF  : '{PROG_RIF}';
+DOMDATE     : '{D' USCORE [n0Aa] USCORE [n0Aa][n0Aa] USCORE [n0a][n0a][IU]? '}';
+DOMDATAELDA : '{DATA_ELDA}';
+
+
+FUNCO       : 'CO@';
+FUNNO       : 'NO@';
+FUNUL       : 'UL@';
+
+MUL         : '*';
+DIV         : '/';
+SUB         : '-';
+ADD         : '+';
+EXP         : '^';
+MOD         : '%';
+EQUALS      : '=';
+EQ          : 'EQ';
+NE          : 'NE';
+GT          : 'GT';
+GE          : 'GE';
+LT          : 'LT';
+LE          : 'LE';
+OR          : 'OR';
+AND         : 'AND';
+SQRT        : 'sqrt';
+SQR         : 'sqr';
+COS         : 'cos';
+SEN         : 'sen';
+TAN         : 'tan';
+LN          : 'ln';
+LOG         : 'log';
+ABS         : 'abs';

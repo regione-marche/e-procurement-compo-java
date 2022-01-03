@@ -1,0 +1,13 @@
+Questo modulo serve per generare il Lexer e il Parser java della grammatica definita nei file "*.g4"
+
+Il percorso presente che parte da './src/main/antlr4/' fino alle grammatiche NON E' RIDONDANTE!
+Serve per definire il package per tutti file che verranno generati!
+
+IL POM PRESENTE IN QUESTA CARTELLA NON FA PARTE DEL PROCESSO SICRAWEB
+Serve solo per generare il Lexer e il Parser e sarebbe un modulo di precompilazione da eseguire
+PRIMA dello sviluppo e della scrittura del codice JAVA per gestire vecchie e nuove istruzioni del compositore
+(NON FA PARTE DELLA FASE DI PRECOMPILAZIONE DI QUESTO MODULO SICRAWEB)
+E' SOLO UN SISTEMA DI PRE-SVILUPPO.
+
+Per generare le grammatiche andare sul pom.xml (quello presente in "./misc") e lanciare:
+mvn clean process-resources

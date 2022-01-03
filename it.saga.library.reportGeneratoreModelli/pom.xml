@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>it.maggioli.informatica</groupId>
+    <artifactId>sicraweb-produzione-base</artifactId>
+    <version>LATEST</version>
+  </parent>
+  <groupId>it.saga.library</groupId>
+  <artifactId>reportGeneratoreModelli</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0.109.0000</version>
+  <name>it.saga.library.reportGeneratoreModelli</name>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <appPrefix>RPA</appPrefix>
+
+    <!--Implementa le nuove firme 2018 +++ librerie compo java +++ -->
+    
+
+    <sicraObsoleteJars>it.saga.library.reportGeneratoreModelli.menu.jar,it.saga.library.reportGeneratoreModelli.setup.jar</sicraObsoleteJars>
+  </properties>
+  <modules>
+    <module>src/RPA-client</module>
+    <module>src/RPA-server</module>
+  </modules>
+  <scm>
+    <developerConnection>
+      scm:svn:http://buildenv.maggioli.it/svn/saga
+    </developerConnection>
+  </scm>
+
+</project>

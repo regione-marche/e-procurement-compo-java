@@ -1,0 +1,72 @@
+parser grammar CompoParser;
+options { tokenVocab=CompoLexer; }
+modello     : statement* EOF;
+statement   : loopExpr | condition | expression;
+mnemonico   : HASH function? identifier WS* (INDEX|format|domain)? HASH;
+identifier  : IDENTIFIER;
+condition   : IF WS? condexpr=expression NEWLINE ifblock=block? (ELSE elseblock=block NEWLINE)? ENDIF;
+loopExpr    : FOR loopCond NEWLINE block? NEWLINE NEXT identifier;
+block       : (statement|NEWLINE|remainders)+?;
+loopCond    : identifier EQUALS lLimit COMMA uLimit (COMMA step)?;
+step        : value;
+lLimit      : value;
+uLimit      : value;
+value
+            : expression #complex
+            | number #simple
+            ;
+number: UINT;
+decimal: UINT ( COMMA UINT)?;
+expression
+        : lop=expression MATHOP rop=expression #mathop
+        | MOD left=value (USCORE (COMPAREOP|LOGICOP) USCORE right+=value)+ MOD #complogicop
+        | MATHFUNC WS+ value #mathfunc
+        | mnemonico #mnemo
+        ;
+format      : SQPARO
+              (
+              FMTSUB
+              |FMTSUBNN
+              |FMTSPLIT
+              |FMTONELINE
+              |FMTELLIPS
+              |FMTTRUNC
+              |FMTROUND
+              |FMTEURO
+              |FMTMAXLEN
+              |FMTLEFTPAD
+              |FMTRIGHTPAD
+              |FMTDATETOSTR
+              |FMTLIRE
+              |FMTCEIL
+              )
+              SQPARC
+            ;
+domain
+            : CONVNUMTOLETTERS
+            | CONVNUMTOLETTERSNODECIMAL
+            | CONVHOURTOLETTERS
+            | ASNUMBER
+            | NODOMAIN
+            | DOMMONEY
+            | DOMMONEYPOS
+            | DOMTEL
+            | DOMTELALL
+            | DOMFAX
+            | DOMFAXALL
+            | DOMSN
+            | DOMKMCIPPO
+            | DOMTIPSS
+            | DOMCODSS
+            | DOMNUMSS
+            | DOMPROGUFF
+            | DOMPROGCIP
+            | DOMPROGREL
+            | DOMPROGRIF
+            | DOMDATAELDA
+            | DOMDATE
+            ;
+function    : FUNCO | FUNNO | FUNUL;
+
+//remainder:.WS;
+remainders:(WS*.WS*)+;
