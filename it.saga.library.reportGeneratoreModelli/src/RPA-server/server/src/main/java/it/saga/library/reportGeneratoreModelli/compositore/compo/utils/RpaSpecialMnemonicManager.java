@@ -1,5 +1,6 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo.utils;
 
+import com.aspose.words.Run;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.type.RpaAbstractMnemonic;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.type.RpaMnemonicConstant;
@@ -20,6 +21,7 @@ public class RpaSpecialMnemonicManager {
     public static final String DATAOGGI     = "DATAOGGI";
     public static final String FINETESTO    = "FINETESTO";
     public static final String SIGNATURE    = "SIGNATURE";
+    public static final String DEEJAY_FF    = "DEEJAY_FF";
 
     private RpaMainCompositore mainCompositore;
     private List<String> specialMnemonicList;
@@ -34,6 +36,7 @@ public class RpaSpecialMnemonicManager {
         this.specialMnemonicList.add(DATAOGGI);
         this.specialMnemonicList.add(FINETESTO);
         this.specialMnemonicList.add(SIGNATURE);
+        this.specialMnemonicList.add(DEEJAY_FF);
 
     }
 
@@ -101,6 +104,48 @@ public class RpaSpecialMnemonicManager {
         else if (mnemonicName.equals(SIGNATURE)) {
 
             return new RpaMnemonicConstant(mainCompositore, "#signature#");
+
+        }
+
+        else if (mnemonicName.equals(DEEJAY_FF)) {
+
+            String result = "Spengo A RADIO?!";
+
+            try {
+
+                if (mainCompositore.getLastRunNodeRead() != null) {
+
+                    Run runNode = mainCompositore.getLastRunNodeRead();
+
+                    if (runNode.getFont() != null && runNode.getFont().getSize() != 0) {
+
+                        double fontSize = runNode.getFont().getSize();
+
+                        if (fontSize < 8) {
+
+                            result += " (VAI VAI! Ma ricompila il modello con un font-size piu grande!!!)";
+
+                        }
+
+                        else if (8 <= fontSize && fontSize <= 14) {
+
+                            result += " (Prima invita Flavio a bere qualcosa e poi fagli spegnere la radio!)";
+
+                        }
+
+                        else {
+
+                            result += " (VAIII! TACCA LA FESTA CON DEEJAY FLAVIO!!)";
+
+                        }
+
+                    }
+
+                }
+
+            } catch (Exception exception) {}
+
+            return new RpaMnemonicConstant(mainCompositore, result);
 
         }
 

@@ -5,17 +5,17 @@
   <parent>
     <groupId>it.saga.library</groupId>
     <artifactId>reportGeneratoreModelli</artifactId>
-    <version>1.0.109.0000</version>
+    <version>3.0.14.0000</version>
     <relativePath>../../</relativePath>
   </parent>
   <groupId>it.saga.library</groupId>
   <artifactId>RPA-client</artifactId>
-  <version>1.0.109.0000</version>
+  <version>3.0.14.0000</version>
   <packaging>pom</packaging>
   <name>RPA-client</name>
   <modules>
     <module>client</module>
-    <!-- <module>menu</module> -->
+    <module>menu</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -44,7 +44,12 @@ public enum RpaErrorType {
     CONVERSION_FAIL_TEXT("E026", CRITICAL, "Impossibile convertire il testo"),
     CONVERSION_LOW_TEXT("E027", CRITICAL, "Impossibile rendere a minusolo le lettere del testo"),
     CONVERSION_CAP_TEXT("E028", CRITICAL, "Impossibile capitalizzare il testo"),
-    CONVERSION_CAP_ALL_TEXT("E029", CRITICAL, "Impossibile capitalizzare tutte le parole del testo");
+    CONVERSION_CAP_ALL_TEXT("E029", CRITICAL, "Impossibile capitalizzare tutte le parole del testo"),
+    REACH_MEMORY_LIMIT("E030", CRITICAL, "E' stato raggiunto il limite di memoria"),
+    CONVERSION_UPPER_TEXT("E031", CRITICAL, "Impossibile rendere maiuscolo il testo"),
+    CONVERSION_FILE_HASH("E032", CRITICAL, "Impossibile recuperare l'hash del file"),
+    CONVERSION_FIND_HASH("E033", CRITICAL, "Impossibile recuperare l'hash del file dal documentale"),
+    LOOP_ERROR("E034", CRITICAL, "Errore nella elaborazione del loop");
 
     private String  code;
     private Type    type;

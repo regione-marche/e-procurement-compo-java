@@ -6,6 +6,9 @@ import it.saga.library.messages.SagaException;
 import it.saga.library.reportGeneratoreModelli.misc.RpaProcessInfo;
 import it.saga.library.reportGeneratoreModelli.misc.RpaRunCompositoreParams;
 import it.saga.library.reportGeneratoreModelli.misc.RpaRunCompositoreResult;
+import it.saga.library.reports.RptDACReportLink;
+import it.saga.library.reports.RptDACReportParameters;
+import it.saga.library.repository.RepDACDocument;
 
 import java.io.BufferedReader;
 import java.rmi.RemoteException;
@@ -51,5 +54,11 @@ public interface RpaBLG extends CdtBLGPkBaseClass {
     void cleanLogNuovoCompositore(AutCFGUserSession session) throws SagaException, RemoteException;
 
     List<Object[]> getLogNuovoCompositore(AutCFGUserSession session) throws SagaException, RemoteException;
+
+    public RepDACDocument eseguiCompositoreByReportLink(
+        AutCFGUserSession session,
+        RptDACReportLink reportLink,
+        RptDACReportParameters params
+    ) throws SagaException, RemoteException;
 
 }

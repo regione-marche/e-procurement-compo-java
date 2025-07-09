@@ -3,6 +3,8 @@ package it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic
 import it.saga.extern.rpa_libs.antlr.v4.runtime.misc.ParseCancellationException;
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.RpaValue;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaCompoException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaInvalidFormatException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaMnemonicInstanceException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.style.RpaStyleManager;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaMnemonicManager;
@@ -39,14 +41,14 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
     private String  table;
     private String  domain;
     private Long    primaryKey;
-    private boolean isExtensible;
+    private Boolean isExtensible;
     private boolean isAlreadyExtended;
 
     private RpaFormat lastFormattedValue;
 
     private Map<Integer, String> booleanTranslationMap;
 
-    public RpaMnemonic(RpaMainCompositore mainCompositore, String value, String fieldTable, String table, String domain, Long primaryKey, boolean isExtensible) {
+    public RpaMnemonic(RpaMainCompositore mainCompositore, String value, String fieldTable, String table, String domain, Long primaryKey/*, boolean isExtensible */) {
 
         super(mainCompositore);
 
@@ -58,16 +60,16 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
         this.domain             = domain;
         this.type               = null;
         this.primaryKey         = primaryKey;
-        this.isExtensible       = isExtensible;
+        // this.isExtensible       = isExtensible;
         this.isAlreadyExtended  = false;
 
         initBooleanTranslationMap();
 
     }
 
-    public RpaMnemonic(RpaMainCompositore mainCompositore, String value, String fieldTable, String table, String domain, boolean isExtensible) throws RpaMnemonicInstanceException {
+    public RpaMnemonic(RpaMainCompositore mainCompositore, String value, String fieldTable, String table, String domain/*, boolean isExtensible*/) throws RpaMnemonicInstanceException {
 
-        this(mainCompositore, value, fieldTable, table, domain, null, isExtensible);
+        this(mainCompositore, value, fieldTable, table, domain, null/*, isExtensible */);
 
     }
 
@@ -88,6 +90,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
             isAlreadyExtended = true;
             value = mnemonicManager.getMnemonicExtension(this, value);
+
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
 
         }
 
@@ -294,6 +301,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
             isAlreadyExtended = true;
             value = mnemonicManager.getMnemonicExtension(this, value);
 
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
+
         }
 
         return value;
@@ -309,6 +321,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
             isAlreadyExtended = true;
             value = mnemonicManager.getMnemonicExtension(this, value);
+
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
 
         }
 
@@ -461,6 +478,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
             isAlreadyExtended = true;
             value = mnemonicManager.getMnemonicExtension(this, value);
+
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
 
         }
 
@@ -712,6 +734,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
             value = mnemonicManager.getMnemonicExtension(this, value);
             updatePrintValue();
 
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
+
         }
 
         if (lastFormattedValue != null) {
@@ -748,6 +775,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
             isAlreadyExtended = true;
             value = mnemonicManager.getMnemonicExtension(this, value);
+
+        } else {
+
+            // Formatto la stringa con formattazione speciale (caso in cui eliminare le quadre su campi NON estensibili)
+            value = mnemonicManager.removeSquareBrackets(this, value);
 
         }
 
@@ -930,9 +962,39 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
     private boolean hasToExtend() {
 
-        boolean isStartFromSicraweb = mainCompositore.getComposerConfiguration().isStartFromSicraweb();
+        try {
 
-        return isStartFromSicraweb && isExtensible && !isAlreadyExtended && value != null && value.length() >= 2000;
+            boolean isStartFromSicraweb = mainCompositore.getComposerConfiguration().isStartFromSicraweb();
+
+            if (this.isExtensible == null) {
+
+                this.isExtensible = mainCompositore.getMnemonicManager().isMnemonicExtensible(
+                        this.domain, this.table, this.fieldTable, primaryKey
+                );
+
+            }
+
+            return isStartFromSicraweb && isExtensible && !isAlreadyExtended && value != null && value.length() >= 2000;
+
+        } catch (RpaInvalidFormatException exception) {
+
+            return false;
+
+        }
+
+    }
+
+    public boolean isExtensible() {
+
+        if (this.isExtensible == null) {
+
+            this.isExtensible = mainCompositore.getMnemonicManager().isMnemonicExtensible(
+                    this.domain, this.table, this.fieldTable, primaryKey
+            );
+
+        }
+
+        return this.isExtensible;
 
     }
 
@@ -983,11 +1045,11 @@ public class RpaMnemonic extends RpaAbstractMnemonic {
 
         if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && primaryKey != null) {
 
-            return new RpaMnemonic(mainCompositore, value, fieldTable, table, domain, primaryKey, isExtensible);
+            return new RpaMnemonic(mainCompositore, value, fieldTable, table, domain, primaryKey/*, isExtensible */);
 
         } else {
 
-            return new RpaMnemonic(mainCompositore, value, fieldTable, table, domain, isExtensible);
+            return new RpaMnemonic(mainCompositore, value, fieldTable, table, domain/*, isExtensible */);
 
         }
 

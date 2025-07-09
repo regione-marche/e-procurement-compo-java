@@ -15,6 +15,7 @@ import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScope
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScopeMnemonicContext;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaComposerException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaMalformedLoopException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaNoLoopForBreakFoundException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaLoopInformationManager;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaMnemonicManager;
@@ -172,11 +173,20 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				}
 
+			} catch (RpaComposerException composerException) {
+
+				throw composerException;
+
 			} catch (Exception exception) {
 
 				exception.printStackTrace();
-				throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-						"per il mnemonico " + loopMnemonicName);
+
+				String code			= context.getText();
+				String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+						"per il mnemonico " + loopMnemonicName;
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -195,7 +205,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -331,8 +345,13 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-					"per il mnemonico " + loopMnemonicName);
+
+			String code			= context.getText();
+			String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+					"per il mnemonico " + loopMnemonicName;
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -349,7 +368,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
                 if (stackLoopValue.getIndexName().equals(indexName)) {
 
-                    throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
                 }
 
@@ -416,8 +439,12 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 			if (!lastEntityFound.equals(fullEntityName)) {
 
-				throw new ParseCancellationException("Tutti i mnemonici dell'ordinamento " +
-						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#");
+				String code			= context.getText();
+				String message		= "Tutti i mnemonici dell'ordinamento " +
+						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -431,7 +458,12 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("Errore nell'ordinamento dell'entità");
+
+			String code			= context.getText();
+			String message		= "Errore nell'ordinamento dell'entità";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -534,8 +566,13 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			} catch (Exception exception) {
 
 				System.err.println(exception);
-				throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-						"per il mnemonico " + loopMnemonicName);
+
+				String code			= context.getText();
+				String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+						"per il mnemonico " + loopMnemonicName;
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -554,7 +591,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -669,8 +710,13 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-					"per il mnemonico " + loopMnemonicName);
+
+			String code			= context.getText();
+			String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+					"per il mnemonico " + loopMnemonicName;
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -687,7 +733,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -754,8 +804,12 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 			if (!lastEntityFound.equals(fullEntityName)) {
 
-				throw new ParseCancellationException("Tutti i mnemonici dell'ordinamento " +
-						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#");
+				String code			= context.getText();
+				String message		= "Tutti i mnemonici dell'ordinamento " +
+						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -769,7 +823,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("Errore nell'ordinamento dell'entità");
+			String code			= context.getText();
+			String message		= "Errore nell'ordinamento dell'entità";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -904,8 +961,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			} catch (Exception exception) {
 
 				System.err.println(exception);
-				throw new ParseCancellationException("[NEW LOOP] Errore nel recupero del numero di istanze " +
-						"per il mnemonico " + loopMnemonicName);
+				String code			= context.getText();
+				String message		= "[NEW LOOP] Errore nel recupero del numero di istanze " +
+						"per il mnemonico " + loopMnemonicName;
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1041,8 +1101,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("[NEW LOOP] Errore nel recupero del numero di istanze " +
-					"per il mnemonico " + loopMnemonicName);
+			String code			= context.getText();
+			String message		= "[NEW LOOP] Errore nel recupero del numero di istanze " +
+					"per il mnemonico " + loopMnemonicName;
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1059,7 +1122,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -1126,8 +1192,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 			if (!lastEntityFound.equals(fullEntityName)) {
 
-				throw new ParseCancellationException("Tutti i mnemonici dell'ordinamento " +
-						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#");
+				String code			= context.getText();
+				String message		= "Tutti i mnemonici dell'ordinamento " +
+						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1141,7 +1210,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("Errore nell'ordinamento dell'entità");
+			String code			= context.getText();
+			String message		= "Errore nell'ordinamento dell'entità";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1244,8 +1316,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			} catch (Exception exception) {
 
 				System.err.println(exception);
-				throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-						"per il mnemonico " + loopMnemonicName);
+				String code			= context.getText();
+				String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+						"per il mnemonico " + loopMnemonicName;
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1264,7 +1339,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -1379,8 +1457,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("[OLD LOOP] Errore nel recupero del numero di istanze " +
-					"per il mnemonico " + loopMnemonicName);
+			String code			= context.getText();
+			String message		= "[OLD LOOP] Errore nel recupero del numero di istanze " +
+					"per il mnemonico " + loopMnemonicName;
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1397,7 +1478,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 				if (stackLoopValue.getIndexName().equals(indexName)) {
 
-					throw new ParseCancellationException("[OLD LOOP] Indice di loop duplicato");
+					String code			= context.getText();
+					String message		= "[OLD LOOP] Indice di loop duplicato";
+					int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+					throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 				}
 
@@ -1464,8 +1548,11 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
 			if (!lastEntityFound.equals(fullEntityName)) {
 
-				throw new ParseCancellationException("Tutti i mnemonici dell'ordinamento " +
-						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#");
+				String code			= context.getText();
+				String message		= "Tutti i mnemonici dell'ordinamento " +
+						"devono appartenere alla stessa entità di #" + loopMnemonicName + "#";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1479,7 +1566,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		} catch (Exception exception) {
 
 			System.err.println(exception);
-			throw new ParseCancellationException("Errore nell'ordinamento dell'entità");
+			String code			= context.getText();
+			String message		= "Errore nell'ordinamento dell'entità";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1538,7 +1628,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			if (scopeLoop.getType() == RpaScopeLoop.Type.NEW) {
 
 				String nodeText = mainCompositore.getLastRunNodeRead().getText();
-				throw new ParseCancellationException("[OLD LOOP END] Loop chiuso con una sintassi diversa (" + nodeText + ")");
+				String code			= context.getText();
+				String message		= "[OLD LOOP END] Loop chiuso con una sintassi diversa (" + nodeText + ")";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1587,7 +1680,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			else {
 
 				String nodeText = mainCompositore.getLastRunNodeRead().getText();
-				throw new ParseCancellationException("[OLD LOOP END] Nome errato di fine loop $$ (" + nodeText + ")");
+				String code			= context.getText();
+				String message		= "[OLD LOOP END] Nome errato di fine loop $$ (" + nodeText + ")";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1597,7 +1693,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		else {
 
 			String nodeText = mainCompositore.getLastRunNodeRead().getText();
-			throw new ParseCancellationException("[OLD LOOP END] Posizione errata di fine loop $$ (" + nodeText + ")");
+			String code			= context.getText();
+			String message		= "[OLD LOOP END] Posizione errata di fine loop $$ (" + nodeText + ")";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1629,7 +1728,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			if (scopeLoop.getType() == RpaScopeLoop.Type.OLD) {
 
 				String nodeText = mainCompositore.getLastRunNodeRead().getText();
-				throw new ParseCancellationException("[NEW LOOP END] Loop chiuso con una sintassi diversa (" + nodeText + ")");
+				String code			= context.getText();
+				String message		= "[NEW LOOP END] Loop chiuso con una sintassi diversa (" + nodeText + ")";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1678,7 +1780,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 			else {
 
 				String nodeText = mainCompositore.getLastRunNodeRead().getText();
-				throw new ParseCancellationException("[NEW LOOP END] Nome errato di fine loop (" + nodeText + ")");
+				String code			= context.getText();
+				String message		= "[NEW LOOP END] Nome errato di fine loop (" + nodeText + ")";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1688,7 +1793,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		else {
 
 			String nodeText = mainCompositore.getLastRunNodeRead().getText();
-			throw new ParseCancellationException("[NEW LOOP END] Posizione errata di fine loop (" + nodeText + ")");
+			String code			= context.getText();
+			String message		= "[NEW LOOP END] Posizione errata di fine loop (" + nodeText + ")";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1711,7 +1819,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
             if (!loopScopeIndexName.equals(loopEndIndexName)) {
 
-				throw new ParseCancellationException("[INLINE-LOOP END] Nome errato di fine loop");
+				String code			= context.getText();
+				String message		= "[INLINE-LOOP END] Nome errato di fine loop";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+				throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 			}
 
@@ -1846,7 +1957,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 		else {
 
 			String nodeText = mainCompositore.getLastRunNodeRead().getText();
-			throw new ParseCancellationException("[INLINE-LOOP] Errata posizione di chiusura del loop in linea (" + nodeText + ")");
+			String code			= context.getText();
+			String message		= "[INLINE-LOOP] Errata posizione di chiusura del loop in linea (" + nodeText + ")";
+			int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+			throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
 		}
 
@@ -1901,7 +2015,10 @@ public abstract class RpaLoopVisitor extends RpaStringVisitor {
 
         } else {
 
-            throw new ParseCancellationException("Il limite del loop deve essere un mnemonico di tipo intero");
+            String code			= context.getText();
+            String message		= "Il limite del loop deve essere un mnemonico di tipo intero";
+            int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+            throw new RpaMalformedLoopException(mainCompositore, errorContext, code, message);
 
         }
 

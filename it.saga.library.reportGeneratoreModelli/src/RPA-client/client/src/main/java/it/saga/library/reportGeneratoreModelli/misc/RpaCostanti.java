@@ -8,12 +8,14 @@ public class RpaCostanti {
     public static final String GLOBAL_COMPO_PARAM   = "global_compo_param:";
     public static final String GLOBAL_COMPO_CONTEXT = "global_compo_context";
 
-    public static final String PARAMETRO_AGGIUNGI_IN_DOC    = "RPA_SalvaInRepo";
-    public static final String PARAMETRO_DESCRIZIONE_STAMPA = "global_report_description";
-    public static final String PARAMETRO_NOME_FILE          = "RPA_NomeFile";
-    public static final String PARAMETRO_ID_DOCUMENTO       = "RPA_id_documento";
-    public static final String PARAMETRO_APP_PREFIX         = "RPA_app_prefix";
-    public static final String PARAMETRO_FILE_REPOSITORY_ID = "RPA_file_repository_id";
+    public static final String PARAMETRO_NOME_FILE_TMP_OUT    = "RPA_NomeFileTmpOut";
+    public static final String PARAMETRO_AGGIUNGI_IN_DOC      = "RPA_SalvaInRepo";
+    public static final String PARAMETRO_DESCRIZIONE_STAMPA   = "global_report_description";
+    public static final String PARAMETRO_NOME_FILE            = "RPA_NomeFile";
+    public static final String PARAMETRO_ID_DOCUMENTO         = "RPA_id_documento";
+    public static final String PARAMETRO_APP_PREFIX           = "RPA_app_prefix";
+    public static final String PARAMETRO_FILE_REPOSITORY_ID   = "RPA_file_repository_id";
+    public static final String PARAMETRO_ID_PRATICA_DOCUMENTO = "RPA_id_pra_doc";
 
     //aggiunto a parte, se non valorizzato viene messo uguale a RPA_SalvaInRepo
     public static final String PARAMETRO_SALVA_IN_DOC_COLLEGATI = "RPA_AddToDocColl";
@@ -39,8 +41,9 @@ public class RpaCostanti {
     public static final String PARAMETRO_GLOBALE_OBDC_DBNAME = "odbc_dbname";
 
     // in caso di oracle 11 e driver OCI, counfigurare il driver e l'url
-    public static final String PARAMETRO_GLOBALE_JDBC_DRIVER = "jdbc_driver";
-    public static final String PARAMETRO_GLOBALE_JDBC_URL    = "jdbc_url";
+    public static final String PARAMETRO_GLOBALE_JDBC_DRIVER                = "jdbc_driver";
+    public static final String PARAMETRO_GLOBALE_JDBC_URL                   = "jdbc_url";
+    public static final String PARAMETRO_GLOBALE_IS_FORCE_USE_DB_PARAMETERS = "is_use_db_parameters";
 
     // gestione timeout linux
     public static final String PARAMETRO_GLOBALE_PROCESS_TIMEOUT = "process_timeout";
@@ -57,6 +60,8 @@ public class RpaCostanti {
 
     // Nuovo Compositore Java
     public static final String PARAMETRO_GLOBALE_COMPOSITORE_JAVA = "modalita_nuovo_compositore";
+    public static final String PARAMETRO_GLOBALE_LIMIT_SIZE_KB = "limit_size";
+    public static final Long LIMIT_SIZE_DEFAULT_KB = 120L * 1024L;
 
     //////////////////////////////////////////////////////
     public static final String CACHE_LATO_SERVER_RPA = "rpa_cache_server";

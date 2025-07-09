@@ -41,9 +41,12 @@ import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScope
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScopeLoop;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaComposerException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaIncludeException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaMemoryReachException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaOutOfMemoryException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.precompile.RpaIncludemodPlugin;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaDebugMessages;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaMnemonicManager;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaNumberUtils;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaLexer;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser;
 
@@ -152,6 +155,8 @@ public class RpaInterprete {
 		}
 
 		docWork = (Document) doc.deepClone(false);
+		mainCompositore.getDebugMessages().setDocument(docWork);
+		mainCompositore.getWarningMessages().setDocument(docWork);
 		traverseAllNodes(doc, docWork);
 
 		// Non cancellare! Eliminazione elementi presenti in Scope-skip
@@ -185,6 +190,23 @@ public class RpaInterprete {
 				Run runNode = (Run) childNode;
 				String textRunNode = runNode.getText();
 				mainCompositore.setLastRunNodeRead(runNode);
+
+				// Controllo se ho raggiungo il limite di memoria per il risultato che sto creando
+				Long limitSize = mainCompositore.getComposerConfiguration().getLimitMemorySize();
+
+				if (
+					limitSize != null &&
+					RpaNumberUtils.calculateDocumentSize(parentDest.getDocument()) > limitSize
+				) {
+
+					// Esco con un'errore
+					String code     	= "";
+					String message  	= "Raggiunto il limite pre-impostato di " + limitSize + " KB";
+					int errorContext   	= RpaComposerException.COMPILE_MESSAGE;
+
+					throw new RpaMemoryReachException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
+
+				}
 
 				// Se sono in un "inline-loop" per cui devo registrare i nodi letti, li aggiungo
 				boolean isLastScopeInlineLoop = scopeStack.peek().getScopeType() == RpaScope.INLINE_LOOP_SCOPE_TYPE;

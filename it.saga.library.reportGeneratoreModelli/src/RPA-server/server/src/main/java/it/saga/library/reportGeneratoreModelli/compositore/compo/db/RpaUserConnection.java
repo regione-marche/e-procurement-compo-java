@@ -1,5 +1,6 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo.db;
 
+import it.saga.library.commonDataTypes.CdtHibernateSessionWrapper;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaComposerStartConfiguration;
 
 import java.util.regex.Matcher;
@@ -12,7 +13,7 @@ import java.util.regex.Pattern;
 public class RpaUserConnection {
 
 	private static final String DB_CONNECTION_POSTGRES_REGEX	= "^DBMS=([^;]+);driverClassName=([^;]+);url=([^;]+);UID=([^;]+);PWD=([^;]+)$";
-	private static final String DB_CONNECTION_SQLSERVER_REGEX	= "^DBMS=([^;]+);driverClassName=([^;]+);url=([^;]+;DatabaseName=[^;]+;SelectMethod=[^;]+);UID=([^;]+);PWD=([^;]+)$";
+	private static final String DB_CONNECTION_SQLSERVER_REGEX	= "^DBMS=([^;]+);driverClassName=([^;]+);url=([^;]+;DatabaseName=[^;]+;SelectMethod=[^;]+);UID=([^;]+);PWD=([^;]+);?(trustServerCertificate=([^;]+))?$";
 	private static final String DB_CONNECTION_ORACLE_REGEX		= "^DBMS=([^;]+);driverClassName=([^;]+);url=([^;]+);UID=([^;]+);PWD=([^;]+)$";
 
 	// Link: https://regex101.com/r/CfYzEc/4/
@@ -30,11 +31,14 @@ public class RpaUserConnection {
 	// Link: https://regex101.com/r/lEHWYR/2
 	private static final String PASSWORD_REGEX	= "(?i)pwd=([^;\\n\\r]+)";
 
+	private CdtHibernateSessionWrapper hibernateSessionWrapper;
 	private String dbms;
 	private String driver;
 	private String url;
 	private String username;
 	private String password;
+	private String trustServerCertificate;
+
 
 	private static final String[] DB_CONNECTION_REGEXS = {
 			DB_CONNECTION_POSTGRES_REGEX,
@@ -50,9 +54,29 @@ public class RpaUserConnection {
 		this.password = password;
 	}
 
+	public RpaUserConnection(String dbms, String driver, String url, String username, String password, String trustServerCertificate) {
+		this.dbms = dbms;
+		this.driver = driver;
+		this.url = url;
+		this.username = username;
+		this.password = password;
+		this.trustServerCertificate = trustServerCertificate;
+	}
+
+	public RpaUserConnection(CdtHibernateSessionWrapper hibernateSessionWrapper) {
+
+		this.hibernateSessionWrapper = hibernateSessionWrapper;
+
+	}
+
 	/*
 	 * Metodi get
 	 */
+
+	public CdtHibernateSessionWrapper getHibernateSessionWrapper() {
+		return hibernateSessionWrapper;
+	}
+
 	public String getDbms() {
 		return dbms;
 	}
@@ -71,6 +95,13 @@ public class RpaUserConnection {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	public String getTrustServerCertificate() {
+		return trustServerCertificate;
 	}
 
 	/**
@@ -179,6 +210,7 @@ public class RpaUserConnection {
 		String url		= null;
 		String username	= null;
 		String password	= null;
+		String trustServerCertificate = null;
 
 		for (String dbConnectionRegex : DB_CONNECTION_REGEXS) {
 
@@ -191,8 +223,10 @@ public class RpaUserConnection {
 				url = matcher.group(3);
 				username = matcher.group(4);
 				password = matcher.group(5);
-
-				return new RpaUserConnection(dbms, driver, url, username, password);
+				if(dbConnectionRegex.equals(DB_CONNECTION_SQLSERVER_REGEX)) {
+					trustServerCertificate = matcher.group(6);
+				}
+				return new RpaUserConnection(dbms, driver, url, username, password, trustServerCertificate);
 
 			}
 
@@ -208,6 +242,7 @@ public class RpaUserConnection {
 
 		// Matcher urlMatcher = Pattern.compile(URL_REGEX).matcher(composerStartConfiguration.getConnectionString());
 
+		CdtHibernateSessionWrapper hibernateSessionWrapper = composerStartConfiguration.getConnection();
 		String dbms		= composerStartConfiguration.getDBMSName();
 		String driver	= composerStartConfiguration.getDBDriver();
 		String username	= composerStartConfiguration.getDBUsername();
@@ -215,7 +250,15 @@ public class RpaUserConnection {
 		String url		= composerStartConfiguration.getDBConnectionUrl();
 		// String url		= urlMatcher.group(1);
 
-		return new RpaUserConnection(dbms, driver, url, username, password);
+		if (hibernateSessionWrapper != null && !composerStartConfiguration.isForceUseDbParameters()) {
+
+			return new RpaUserConnection(hibernateSessionWrapper);
+
+		} else {
+
+			return new RpaUserConnection(dbms, driver, url, username, password);
+
+		}
 
 	}
 

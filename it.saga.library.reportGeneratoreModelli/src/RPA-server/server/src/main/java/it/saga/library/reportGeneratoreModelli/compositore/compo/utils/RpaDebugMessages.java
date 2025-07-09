@@ -1,6 +1,8 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo.utils;
 
+import com.aspose.words.Document;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaComposerConfiguration;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,6 +33,7 @@ public class RpaDebugMessages {
     private static final int MAX_TEXT_LENGTH_ORACLE     = 300;
     private static final int MAX_TEXT_LENGTH_SQLSERVER  = 300;
 
+    private Document                    document;
     private RpaComposerConfiguration    composerConfiguration;
     private Map<Integer, Integer>       mapMaxTextLength;
 
@@ -70,6 +73,12 @@ public class RpaDebugMessages {
     }
 
     public void print(int context, String message) {
+
+        if (composerConfiguration.isDebugMessageActive() && document != null && document.getText() != null)  {
+
+            message = message + " (" + RpaNumberUtils.calculateDocumentSize(document) + " KB)";
+
+        }
 
         if (composerConfiguration.isSystemPrintActive()) {
 
@@ -158,5 +167,7 @@ public class RpaDebugMessages {
         }
 
     }
+
+    public void setDocument(Document document) { this.document = document; }
 
 }

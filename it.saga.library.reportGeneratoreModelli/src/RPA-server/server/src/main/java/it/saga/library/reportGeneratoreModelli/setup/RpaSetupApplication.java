@@ -14,8 +14,8 @@ import it.saga.pubblici.praticheEdilizie.setup.misc.ApeSetupUtility;
 
 public class RpaSetupApplication extends SetupLazyApp {
 
-  private static int NUM_CURRENT_VERSION    = 13;
-  private static int NUM_REMOTE_STEP        = 1;
+  private static int NUM_CURRENT_VERSION    = 14;
+  private static int NUM_REMOTE_STEP        = 2;
 
 
   public RpaSetupApplication() {

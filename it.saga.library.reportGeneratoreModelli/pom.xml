@@ -4,20 +4,16 @@
   <parent>
     <groupId>it.maggioli.informatica</groupId>
     <artifactId>sicraweb-produzione-base</artifactId>
-    <version>LATEST</version>
+    <version>2024.09.02.071047</version>
   </parent>
   <groupId>it.saga.library</groupId>
   <artifactId>reportGeneratoreModelli</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.109.0000</version>
+  <version>3.0.14.0000</version>
   <name>it.saga.library.reportGeneratoreModelli</name>
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.sourceEncoding>cp1252</project.build.sourceEncoding>
     <appPrefix>RPA</appPrefix>
-
-    <!--Implementa le nuove firme 2018 +++ librerie compo java +++ -->
-    
-
     <sicraObsoleteJars>it.saga.library.reportGeneratoreModelli.menu.jar,it.saga.library.reportGeneratoreModelli.setup.jar</sicraObsoleteJars>
   </properties>
   <modules>
@@ -26,7 +22,7 @@
   </modules>
   <scm>
     <developerConnection>
-      scm:svn:http://buildenv.maggioli.it/svn/saga
+      scm:git:https://gitlab.com/maggiolispa/sicraweb/pratiche/it.saga.library.reportGeneratoreModelli.git
     </developerConnection>
   </scm>
 

@@ -74,15 +74,20 @@ public class RpaComposerConfiguration {
 	private boolean isAvoidUseNewTables = false;
 	// Controlla se il compositore è stato esplicitamente avviato da un applicativo diverso da sicraweb
 	private boolean isStartFromSicraweb = true;
+	// Definisce un limite di memoria (in KB) per il document ASPOSE di "destinazione"
+	private Long limitMemorySize;
+	// Imposta se utilizzare la connessione a DB tramite sessione hibernate
+	private boolean isUseHibernateConnection;
 
 	public RpaComposerConfiguration(RpaMainCompositore mainCompositore) {
 
-		this.mainCompositore	= mainCompositore;
-		this.inputModel			= null;
-		this.inputDocument		= null;
-		this.outputModel		= null;
-		this.rtf				= false;
-		this.limitReadData		= DEFAULT_LIMIT_READ_DATA;
+		this.mainCompositore			= mainCompositore;
+		this.inputModel					= null;
+		this.inputDocument				= null;
+		this.outputModel				= null;
+		this.rtf						= false;
+		this.isUseHibernateConnection	= false;
+		this.limitReadData				= DEFAULT_LIMIT_READ_DATA;
 
 		/*
 		Random random = new Random();
@@ -293,5 +298,13 @@ public class RpaComposerConfiguration {
 	public boolean isAvoidUseNewTables() { return isAvoidUseNewTables; }
 
 	public boolean isStartFromSicraweb() { return isStartFromSicraweb; }
+
+	public Long getLimitMemorySize() { return limitMemorySize; }
+
+	public void setLimitMemorySize(Long limitMemorySize) { this.limitMemorySize = limitMemorySize; }
+
+	public boolean isUseHibernateConnection() { return isUseHibernateConnection; }
+
+	public void setIsUseHibernateConnection(boolean isUseHibernateConnection) { isUseHibernateConnection = isUseHibernateConnection; }
 
 }

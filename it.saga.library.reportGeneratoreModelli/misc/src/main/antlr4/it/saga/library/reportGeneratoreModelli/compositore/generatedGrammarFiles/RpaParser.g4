@@ -845,7 +845,16 @@ formatDomain
         | DOMCAPTEXT WS* CYPARC                                                                             #formatDomainCapText
 
         // Esempio: #STR3{CAPALLTEXT}#
-        | DOMCAPALLTEXT WS* CYPARC                                                                          #formatDomainCapAllText;
+        | DOMCAPALLTEXT WS* CYPARC                                                                          #formatDomainCapAllText
+
+        // Esempio: #STR3{UPPERTEXT}#
+        | DOMUPPERTEXT WS* CYPARC                                                                           #formatDomainUpperText
+
+        // Esempio: #STR3{HASHFILE}#
+        | DOMHASHFILE WS* CYPARC                                                                            #formatDomainHashFile
+
+        // Esempio: #TOT50{FINDHASH}#
+        | DOMFINDHASH WS* CYPARC                                                                            #formatDomainFindHash;
 
 
 prefixFunction

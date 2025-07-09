@@ -2,6 +2,7 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo;
 
 import com.aspose.words.BuiltInDocumentProperties;
+import com.aspose.words.DocumentBase;
 import com.aspose.words.Node;
 import com.aspose.words.Run;
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.RpaCompoUtils;
@@ -39,6 +40,7 @@ import org.apache.commons.cli.ParseException;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -49,7 +51,7 @@ import java.util.regex.Pattern;
 
 public class RpaMainCompositore {
 
-	public static final boolean IS_AUTO_OPEN_RESULT			= true;
+	public static boolean IS_AUTO_OPEN_RESULT				= true;
 	public static final boolean IS_SAVE_NEW_DOCUMENT_SYNTAX	= false;
 
 	public static final int EXIT_CODE_OK		= 1;
@@ -82,6 +84,7 @@ public class RpaMainCompositore {
 	private RpaDebugMessages					debugMessages;
 	private RpaMnemonicEmpty					mnemonicEmpty;
 	private RpaImportExternalImageI				importExternalImage;
+	// TODO: Completare il controllo su interprete e collegarlo alla classe dei parametri
 
 	public RpaMainCompositore(String[] args) {
 
@@ -97,6 +100,131 @@ public class RpaMainCompositore {
 		this.nodesBreakLoopToDelete		= new ArrayList<Node>();
 		this.mnemonicEmpty				= new RpaMnemonicEmpty(this);
 
+	}
+	public void run(Connection connection) throws RpaComposerException {
+		if (isRunning) {
+			return;
+		} else {
+			isRunning = true;
+		}
+		exitCode = EXIT_CODE_OK;
+		if (args == null) {
+			runFromApplication(connection);
+		}
+	}
+
+	private void runFromApplication(Connection connection) throws RpaComposerException {
+
+		initContent();
+
+		composerConfiguration.initLogParameters(composerStartConfiguration);
+		composerConfiguration.setIsSystemPrintActive(false);
+
+		// Inizializzo la connessione al database
+		composerConfiguration.setConn(connection);
+
+
+		// Inizializzo il file-documento da processare
+		File inputModel = new File(composerStartConfiguration.getDocumentFilePath());
+
+		if (inputModel.exists() && inputModel.canRead()) {
+			composerConfiguration.setInputModel(inputModel);
+		} else {
+			String code		= "";
+			String message	= "Il file di modello indicato come input: " + inputModel.getPath() + " non esiste o è protetto";
+			int context		= RpaComposerException.PRECOMPILE_MESSAGE;
+
+			throw new RpaDocumentNotFoundException(composerConfiguration, antlrErrorListener, context, code, message);
+
+		}
+
+		// Inizializzo il nome dell'entità
+		String	entityDeclaration	= composerStartConfiguration.getEntityDeclaration();
+		Matcher entityMatcher		= Pattern.compile("^(([^:]+)\\:([^:=]+)\\=([^:=;]+))(;([^;:=]+\\=[^;:=]+))*$").matcher(entityDeclaration);
+
+		if (entityMatcher.find()) {
+			List<String[]> identities = new ArrayList<String[]>();
+			String[] identity = new String[] { entityMatcher.group(2), entityMatcher.group(3), entityMatcher.group(4) };
+			identities.add(identity);
+			if (entityMatcher.group(5) != null && !entityMatcher.group(5).isEmpty()) {
+				Matcher matcherExtraParameter = Pattern.compile(";([^;:=]+)\\=([^;:=]+)").matcher(entityMatcher.group(5));
+				while (matcherExtraParameter.find()) {
+					String[] extraIdentity = new String[] { matcherExtraParameter.group(1), matcherExtraParameter.group(2) };
+					identities.add(extraIdentity);
+				}
+			}
+			composerConfiguration.setIdentity(identities);
+		} else {
+			String code		= "";
+			String message	= "L'entità passata come parametro non sembra essere valida";
+			int context = RpaComposerException.PRECOMPILE_MESSAGE;
+			throw new RpaEntityDeclarationException(composerConfiguration, antlrErrorListener, context, code, message);
+		}
+
+		// Verifico se usare la sessione hibernate
+		composerConfiguration.setIsUseHibernateConnection(
+				!composerStartConfiguration.isForceUseDbParameters() &&
+						composerStartConfiguration.getConnection() != null
+		);
+
+		// Inizializzo il tipo di database
+		String dbTypeString = composerStartConfiguration.getDbType();
+		composerConfiguration.setDBType(dbTypeString);
+
+		// Inizializzo il path su cui salvare il modello
+		composerConfiguration.setOutputModel(new File(composerStartConfiguration.getOutputFilePath()));
+
+		// Inizializzo gli eventuali parametri opzionali
+		if (composerStartConfiguration.getParameters() != null && !composerStartConfiguration.getParameters().isEmpty()) {
+
+			registerManager.updateRegisters(composerStartConfiguration.getParameters());
+			composerConfiguration.setExtraOptions(registerManager);
+
+		}
+
+		// Controllo se ho caratteri di formattazione per i decimali
+		if (composerStartConfiguration.getDecimalSeparator() != null || composerStartConfiguration.getIntegerSeparator() != null) {
+
+			Character decimalCharacter = composerStartConfiguration.getDecimalSeparator();
+			Character integerCharacter = composerStartConfiguration.getIntegerSeparator();
+
+			styleManager.updateDecimalCharacterSeparators(decimalCharacter, integerCharacter);
+
+		}
+
+		// Controllo se ho definito un limite per il numero di dati da leggere
+		if (composerStartConfiguration.getLimitReadData() != null) {
+			composerConfiguration.setLimitReadData(composerStartConfiguration.getLimitReadData());
+		}
+
+		// Inizializzo il gestore dei mnemonici
+		mnemonicDescriptionList = new RpaMnemonicDescriptionList(this);
+		mnemonicManager.init(composerConfiguration.getConn());
+
+		// Se ho un id sessione, ne recupero i codici associati
+		if (composerConfiguration.getSessionParametersId() != null) {
+			parametersManager.init(composerConfiguration.getSessionParametersId());
+		}
+
+		// Inizializzo il sistema di recupero di immagini dall'esterno
+		this.importExternalImage = composerStartConfiguration.getImportExternalImage();
+
+		// Inizializzo il limite di memoria da utilizzare
+		composerConfiguration.setLimitMemorySize(composerStartConfiguration.getLimitMemorySize());
+
+		// Eseguo il compositore
+		printStartComposer();
+
+		RpaCompositore compositore = new RpaCompositore(this);
+		compositore.eseguiCompositore(composerConfiguration);
+
+		// Stampo il grafo dei mnemonici in graphviz (Richiamare quello dei "DocumentScope")
+		// MnemonicManager.getMnemonicManager().saveMnemonicGraphGraphviz(".", true);
+		printEndComposer();
+		// Chiudo la connessione al DB
+		if (!composerConfiguration.isUseHibernateConnection()) {
+			RpaDBUtils.close(composerConfiguration.getConn());
+		}
 	}
 
 	public void run() throws RpaComposerException {
@@ -148,10 +276,8 @@ public class RpaMainCompositore {
 
 			}
 
-		} else {
-
-			composerConfiguration.setConn(RpaDBUtils.sicraweb());
-
+		}else{
+			System.err.println("Configurazione insufficente, impossibile stabilire una connessione con il database specificato");
 		}
 
 		System.out.println("[Main] Connessione al database:");
@@ -345,7 +471,9 @@ public class RpaMainCompositore {
 
 		// Stampo il grafo dei mnemonici in graphviz (Richiamare quello dei "DocumentScope")
 		// MnemonicManager.getMnemonicManager().saveMnemonicGraphGraphviz(".", true);
-
+		if (line.hasOption("i")) {
+			IS_AUTO_OPEN_RESULT = false;
+		}
 		// Apro il file con l'applicativo del sistema
 		if (IS_AUTO_OPEN_RESULT) {
 
@@ -364,7 +492,11 @@ public class RpaMainCompositore {
 		printEndComposer();
 
 		// Chiudo la connessione al DB
-		RpaDBUtils.close(composerConfiguration.getConn());
+		if (!composerConfiguration.isUseHibernateConnection()) {
+
+			RpaDBUtils.close(composerConfiguration.getConn());
+
+		}
 
 		if (compositionManagement != null) { // <-- Elimino la SystemTray icon se presente e termino il programma
 			compositionManagement.getSystemTray().remove(compositionManagement.getTrayIcon());
@@ -425,6 +557,10 @@ public class RpaMainCompositore {
 		options.addOption(option);
 
 		option = new Option("a", true, "Applicativo di avvio");
+		option.setRequired(false);
+		options.addOption(option);
+
+		option = new Option("i", false, "Inibisce l'apertura del file alla conclusione della composizione");
 		option.setRequired(false);
 		options.addOption(option);
 
@@ -522,6 +658,12 @@ public class RpaMainCompositore {
 
 		}
 
+		// Verifico se usare la sessione hibernate
+		composerConfiguration.setIsUseHibernateConnection(
+				!composerStartConfiguration.isForceUseDbParameters() &&
+				composerStartConfiguration.getConnection() != null
+		);
+
 		// Inizializzo il tipo di database
 		String dbTypeString = composerStartConfiguration.getDbType();
 		composerConfiguration.setDBType(dbTypeString);
@@ -568,6 +710,9 @@ public class RpaMainCompositore {
 		// Inizializzo il sistema di recupero di immagini dall'esterno
 		this.importExternalImage = composerStartConfiguration.getImportExternalImage();
 
+		// Inizializzo il limite di memoria da utilizzare
+		composerConfiguration.setLimitMemorySize(composerStartConfiguration.getLimitMemorySize());
+
 		// Eseguo il compositore
 		printStartComposer();
 
@@ -580,7 +725,11 @@ public class RpaMainCompositore {
 		printEndComposer();
 
 		// Chiudo la connessione al DB
-		RpaDBUtils.close(composerConfiguration.getConn());
+		if (!composerConfiguration.isUseHibernateConnection()) {
+
+			RpaDBUtils.close(composerConfiguration.getConn());
+
+		}
 
 	}
 

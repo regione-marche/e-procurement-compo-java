@@ -35,33 +35,33 @@ public class RpaDBUtils {
 		}
 	}
 
-	public static Connection sicraweb() {
-		try {
-			// return DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "root");
-			// return DriverManager.getConnection("jdbc:postgresql://localhost:5432/soncino", "postgres", "postgres");
-			// return DriverManager.getConnection("jdbc:oracle:thin:@elda13:1521:prod01", "CONCE_450", "CONCE_450");
-			// return DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.13:1521:PROD01", "test_compo", "test_compo");
-
-			// return DriverManager.getConnection("jdbc:postgresql://localhost:5432/soncino", "postgres", "postgres");
-			// return DriverManager.getConnection("jdbc:postgresql://wf81collx:5432/olgiate", "olgiate", "olgiate");
-			return DriverManager.getConnection("jdbc:postgresql://wf81uff:5432/olgiate", "olgiate", "olgiate");
-		} catch (SQLException e) {
-			System.err.println("Impossibile connettersi al database");
-			e.printStackTrace();
-			return null;
-		}
-	}
-
 	public static Connection prepareConnection(RpaUserConnection userConnection) {
 		Connection connection = null;
 		// TODO: Ricontrollare il "Class.forName" dopo che collx è stato aggiornato
 		// try {
 		// Class.forName(userConnection.getDriver());
-		try {
-			connection = DriverManager.getConnection(userConnection.getUrl(), userConnection.getUser(), userConnection.getPassword());
-		} catch (SQLException e) {
-			System.err.println("Impossibile connettersi al database");
-			e.printStackTrace();
+
+		// Se ho già una sessione da Hibernate, ne estraggo la connessione versione JDBC
+		if (userConnection.getHibernateSessionWrapper() != null) {
+
+			connection = userConnection.getHibernateSessionWrapper().connection();
+
+		} else {
+
+			try {
+				if(userConnection.getTrustServerCertificate() != null) {
+					userConnection.setUrl(userConnection.getUrl() + ";" + userConnection.getTrustServerCertificate());
+				}
+
+				connection = DriverManager.getConnection(userConnection.getUrl(), userConnection.getUser(), userConnection.getPassword());
+
+			} catch (SQLException e) {
+
+				System.err.println("Impossibile connettersi al database");
+				e.printStackTrace();
+
+			}
+
 		}
 		/*
 		} catch (ClassNotFoundException e) {

@@ -5,6 +5,7 @@ import it.saga.library.authentication.AutCFGClientSession;
 import it.saga.library.authentication.AutCFGParamScope;
 import it.saga.library.authentication.AutCFGUserSession;
 import it.saga.library.authentication.AutEXCSessionException;
+import it.saga.library.authentication.AutUtils;
 import it.saga.library.authentication.clustercache.AutClusterCache;
 import it.saga.library.bonifiche.BonUtility;
 import it.saga.library.common.CmnUtils;
@@ -17,12 +18,16 @@ import it.saga.library.commonDataTypes.CdtUtils;
 import it.saga.library.commonDataTypes.config.CdtBLGPersistenceConfiguration;
 import it.saga.library.commonPratiche.Ap1Costanti;
 import it.saga.library.commonPratiche.Ap1Params;
+import it.saga.library.commonPratiche.Ap1Utils;
 import it.saga.library.documentiCollegati.DocCollegatiInterface;
 import it.saga.library.documentiCollegati.DocDACCollegatiDetails;
 import it.saga.library.documentiCollegati.DocDACCollegatiMaster;
 import it.saga.library.gestioneDocumentale.DocService;
 import it.saga.library.gestioneDocumentale.DocUtils;
 import it.saga.library.gestioneDocumentale.DocWordProcessorException;
+import it.saga.library.gestioneDocumentale.flows.DocDACDocumenti;
+import it.saga.library.gestioneDocumentale.flows.DocDACTipiDocumento;
+import it.saga.library.gestioneDocumentale.flows.DocFlowsUtils;
 import it.saga.library.gestioneDocumentale.javaProcessor.DocAsposeWordProcessor;
 import it.saga.library.localization.LocParameter;
 import it.saga.library.logging.Log;
@@ -50,9 +55,24 @@ import it.saga.library.reportGeneratoreModelli.misc.RpaUtils;
 import it.saga.library.reportGeneratoreModelli.misc.SaveCompoParametersParams;
 import it.saga.library.reportGeneratoreModelli.misc.SaveCompoParametersResult;
 import it.saga.library.reportGeneratoreModelli.setup.misc.RpaSetupUtility;
+import it.saga.library.reports.RptDACPrinterParameters;
+import it.saga.library.reports.RptDACReportExecution;
+import it.saga.library.reports.RptDACReportLink;
+import it.saga.library.reports.RptDACReportParameters;
+import it.saga.library.reports.RptReportEngine;
+import it.saga.library.reports.misc.RptExecuteParams;
+import it.saga.library.reports.misc.RptExecuteReportLinkDescriptor;
+import it.saga.library.reports.misc.RptExecuteResult;
 import it.saga.library.repository.RepDACDocument;
 import it.saga.library.repository.RepUtils;
+import it.saga.pubblici.pratiche.PraDACPratiche;
+import it.saga.pubblici.pratiche.PraDACPraticheDocumenti;
+import it.saga.pubblici.pratiche.PraDACPraticheDocumentiFile;
+import it.saga.pubblici.pratiche.PraService;
+import it.saga.pubblici.pratiche.PraUtils;
+import it.saga.pubblici.praticheEdilizie.ApeService;
 import it.saga.pubblici.praticheEdilizie.ApeUtils;
+import it.saga.pubblici.praticheEdilizie.server.impl.ApeBLGSchedulerBean;
 
 import javax.ejb.CreateException;
 import javax.naming.InitialContext;
@@ -95,7 +115,6 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
     private static final String DB_TYPE_SQLSERVER = "MSQ";
     private static final String DB_TYPE_POSTGRES  = "POS";
 
-
     private final static Log log=Log.getLog(RpaBLGBean.class);
 
     public void caricaC0campi(AutCFGUserSession session,String urlFile) throws Exception{
@@ -129,7 +148,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             rpaC0campi.setC0cChi(RpaSetupUtility.strToString(fields[1]));
             String c0cMneUni=RpaSetupUtility.strToString(fields[2]);
             rpaC0campi.setC0cMneUni(c0cMneUni);
-            // logica per estrarre dato PRAEST.APE_CONCES.APE il suffisso APE che comporr‡ l'app_prefix
+            // logica per estrarre dato PRAEST.APE_CONCES.APE il suffisso APE che comporr√† l'app_prefix
             String c0cMneUniParts[]=c0cMneUni.split("\\.");
             rpaC0campi.setAppPrefix(RpaSetupUtility.strToString(c0cMneUniParts[c0cMneUniParts.length-1],3).toLowerCase());
             rpaC0campi.setC0cMneBer(RpaSetupUtility.strToString(fields[3]));
@@ -143,7 +162,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                 rpaC0campi.setC0cIdSplit(RpaSetupUtility.strToString(fields[10], 100));
             }
 
-            //Cerco se esiste gi‡ la riga, se si la ggiorno, altrimenti la inserisco
+            //Cerco se esiste gi√† la riga, se si la ggiorno, altrimenti la inserisco
             String query=" from RpaDACC0campi c where c.c0cMneBer = ? ";
             Object[] params=new Object[]{ rpaC0campi.getC0cMneBer() };
             CdtDACList result=this.readCollection(session,query,params);
@@ -200,7 +219,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             rpaC0entit.setC0eArg(RpaSetupUtility.strToString(fields[4],10));
             rpaC0entit.setC0eDes(RpaSetupUtility.strToString(fields[5],60));
             rpaC0entit.setC0eKey(RpaSetupUtility.strToString(fields[6],190));
-            // logica per estrarre dato APE_TAB_CC.APE il suffisso APE che comporr‡ l'app_prefix
+            // logica per estrarre dato APE_TAB_CC.APE il suffisso APE che comporr√† l'app_prefix
             String c0eNomParts[]=c0eNom.split("\\.");
             rpaC0entit.setAppPrefix(RpaSetupUtility.strToString(c0eNomParts[c0eNomParts.length-1],3).toLowerCase());
             // Sono su due righe i valori per un singolo DAC entit
@@ -219,7 +238,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             rpaC0entit.setC0eNomEx(RpaSetupUtility.strToString(fields[6],35));
             rpaC0entit.setC0eKeyEx(RpaSetupUtility.strToString(fields[7],190));
 
-            //Cerco se esiste gi‡ la riga, se sÏ la aggiorno, altrimenti la inserisco
+            //Cerco se esiste gi√† la riga, se s√¨ la aggiorno, altrimenti la inserisco
             String query=" from RpaDACC0entit c where c.c0eNom = ? ";
             Object[] params=new Object[]{ rpaC0entit.getC0eNom() };
             CdtDACList result=this.readCollection(session,query,params);
@@ -267,7 +286,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         // che sta invocando la stampa. Non e' antiatomico ma dovrebbe reggere
         // sufficientemente.
 
-        //A.M.l'id sessione Ë troppo grande compngo un numero dato:
+        //A.M.l'id sessione √® troppo grande compngo un numero dato:
         // dall'utente corrente + le ultime tre cifre dell'id sessione(new Long( session.getSessionID()%1000), 3);
         Long idSessione = getIdSessionCompo(session);
 
@@ -348,10 +367,15 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                 }
 
                 // questi sono i due file principali
-                // NOTA qui File.createTempFile va bene perchË gli viene passata la directory che dovrebbe essere gi‡ scrivibile
+                // NOTA qui File.createTempFile va bene perch√® gli viene passata la directory che dovrebbe essere gi√† scrivibile
                 File tempInputFile           = RpaUtils.createTempFile( "compo_", "_in." + extFileModello, esCompoTemporary ); //qui va cambiato il nome ed estensione del modello altrimenti fa solo rtf
                 File tempOutputFileRequested = RpaUtils.createTempFile( "compo_", "_out"   , esCompoTemporary ); // ".rtf" ce lo mette il compositore
-                File tempOutputFileProduced  = new File( tempOutputFileRequested.getAbsoluteFile() + "." + extFileModello);
+
+                String nomeFileTmpOut = params.getValore(RpaCostanti.PARAMETRO_NOME_FILE_TMP_OUT);
+
+                File tempOutputFileProduced  = nomeFileTmpOut!=null? new File(nomeFileTmpOut): new File( tempOutputFileRequested.getAbsoluteFile() + "." + extFileModello);
+
+
 
                 // questi sono i file di appoggio che il compo crea al runtime
                 // (ci sarebbero anche i compilati ma per ora li rimuovo al termine
@@ -371,17 +395,19 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
                 // la lista dei file che dovro' eliminare al termine dell'esecuzione
                 // (se presenti)
-                File[] deadWalkingFiles = new File[] {
-                    tempInputFile          ,
-                    tempOutputFileRequested,
-                    tempOutputFileProduced ,
-                    tempOkFile             ,
-                    tempInfFile            ,
-                    tempIdxFile            ,
-                    tempErrFile            ,
-                    tempSemFile            ,
-                    logFile
-                };
+                List<File> deadWalkingFiles = new ArrayList<File>();
+                deadWalkingFiles.add(tempInputFile );
+                deadWalkingFiles.add(tempOutputFileRequested);
+                if(nomeFileTmpOut==null){
+                    deadWalkingFiles.add(tempOutputFileProduced);
+                }
+                deadWalkingFiles.add(tempOkFile);
+                deadWalkingFiles.add(tempInfFile);
+                deadWalkingFiles.add(tempIdxFile);
+                deadWalkingFiles.add(tempErrFile);
+                deadWalkingFiles.add(tempSemFile);
+                deadWalkingFiles.add(logFile);
+
 
                 try {
                     // scrivo i parametri nel database (se ci sono, altrimenti il save
@@ -422,7 +448,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     // -f  Lettura dei comandi da file
 
 
-                    // in linux l'apice doppio crea dei problemi se nella stringa c'Ë un nome di una variabile
+                    // in linux l'apice doppio crea dei problemi se nella stringa c'√® un nome di una variabile
                     String apice = "\"";
                     if (!CmnUtils.isWindows()){
                         apice="'";
@@ -447,7 +473,13 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                         parametriSessione += ";" + RpaCostanti.PARAMETRO_SESSIONE_APP + appPrefix;
                     }
 
-                    RpaComposerStartConfiguration compoConf = getConnectionsString(session, isOdbc,parametriSessione);
+                    boolean isCompoJava = Ap1Params.getParametroBoolean(
+                            session,
+                            RpaCostanti.APP_PREFIX,
+                            RpaCostanti.PARAMETRO_GLOBALE_COMPOSITORE_JAVA
+                    );
+
+                    RpaComposerStartConfiguration compoConf = getConnectionsString(session, isOdbc,parametriSessione, isCompoJava);
 
                     //    in windows uso il percorso completo altrimenti va in errore
                     //    in linux devo basta il nome del programma, la directory di lavoro viene passata alla shell
@@ -492,7 +524,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                         parametriSessione,
                         baseInputFileName,
                         compoConf,
-                        null
+                        isCompoJava
                     );
 
                     // recupero (se non ho avuto errori) il file di risposta
@@ -508,10 +540,15 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     if(nomeFileRepo==null || "".equals(nomeFileRepo)){
                         nomeFileRepo = templateDocumentName;
                     }
-                    // se anche questo non Ë valido, allora prendo quello standard
+                    // se anche questo non √® valido, allora prendo quello standard
                     if(nomeFileRepo==null || "".equals(nomeFileRepo)){
                         nomeFileRepo = "compo_result.rtf";
                     }
+
+                    //toglie i caratteri speciali, tranne il "."
+                    nomeFileRepo =  nomeFileRepo.replaceAll("[\\W&&[^\\.]]+", "_");
+                    //toglie eventuali doppi (o pi√π) underscore
+                    nomeFileRepo =  nomeFileRepo.replaceAll("_{2,}+", "_");
 
                     RepDACDocument result =
                         params.getResultDocumentCarrier() != null
@@ -523,7 +560,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
                     inserisciInElementoDocumentale(session,params,result,docOut);
 
-                    return new RpaRunCompositoreResult( result );
+                    return new RpaRunCompositoreResult( docOut );
 
                 } finally {
 
@@ -542,10 +579,9 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                         log.debug( "Modalita' debug attiva, lascio i file temporanei sul server per ispezione" );
                     } else {
                         // cancello i file temporanei
-                        for( int c = 0; c < deadWalkingFiles.length; c++ ) {
-                            if(    deadWalkingFiles[c]!=null
-                                && deadWalkingFiles[c].exists()){
-                                deadWalkingFiles[c].delete();
+                        for( File f: deadWalkingFiles) {
+                            if(f!=null && f.exists()){
+                                f.delete();
                             }
                         }
                     }
@@ -684,7 +720,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     break;
                 }
             }
-            // se non ho trovato il file oppure Ë da aggiornare forzo l'aggiornamento
+            // se non ho trovato il file oppure √® da aggiornare forzo l'aggiornamento
             if(file==null || !res.matches(file)){
                 //al primo che non va bene esco
                 return false;
@@ -710,9 +746,27 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
             CdtDACPkBaseClass dac = null;
             String idDoc = params.getValore(RpaCostanti.PARAMETRO_ID_DOCUMENTO);
+            Long idPraDoc = Ap1Utils.stringToLong(params.getValore(RpaCostanti.PARAMETRO_ID_PRATICA_DOCUMENTO));
 
             if(idDoc!=null && !"".equals(idDoc)){
                 dac = DocService.readDocumento(session,new Long(idDoc));
+            }else if(idPraDoc!=null){
+
+                PraDACPraticheDocumenti praDoc = new PraDACPraticheDocumenti();
+                praDoc.selTipologiaDocumento();
+                praDoc.selRepDocument();
+                praDoc.selElementoDocumentale();
+                praDoc = read(session, praDoc, idPraDoc);
+
+                if(praDoc.isGestioneDocumentiCollegati(session)){
+                    //caso faldone creo l'elemento documentale
+                    //se √® nessario uscire prima, rimuovere la dipendeza a pra 1.3.136, lasciarla a 1.35.135
+                    //e passare idPraDoc
+                    dac = PraService.getOrCreateElementoDocumentale(session, praDoc);
+                }else {
+                    //caso pra_pratiche_documentio_files
+                    addToPraDocuemtniFiles(session,praDoc,docOut);
+                }
             }else{
 
                 String ctx = params.getContext();
@@ -754,7 +808,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                         save(session, dac);
                     }else{
                         if(master.getPkid()==null || master.isCreated()){//a volte non setta correttamente il crud
-                            master = (DocDACCollegatiMaster)DocService.getBLGMaster().save(session, master);
+                            master = DocService.getBLGMaster().save(session, master);
                         }
 
                         DocDACCollegatiDetails dett = new DocDACCollegatiDetails(docOut);
@@ -788,14 +842,14 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         RepDACDocument document,
         Long idSessione
     ) throws SagaException {
-        RepDACDocument documentOut = null;
+        RepDACDocument documentOut = document; //se non viene salvato ritorna il documento non persisisto, altrimenti si blocca la stampa a video
         if(RpaCostanti.VALORE_SI.equals(params.getValore(RpaCostanti.PARAMETRO_AGGIUNGI_IN_DOC))){
             documentOut = new RepDACDocument();
             try{
                 documentOut.copyAllFrom(document);
                 //imposto l'eventuale repository personalizzata per contesto
                 String appPrefix = params.getValore(RpaCostanti.PARAMETRO_APP_PREFIX);
-                String repLibName = Ap1Params.getParametroString(session,appPrefix,"repository_library"/*cambiare quando sar‡ rilasciato AP1 Ap1Params.PARAM_REPOSITORY_LIBRARY*/);
+                String repLibName = Ap1Params.getParametroString(session,appPrefix,"repository_library"/*cambiare quando sar√† rilasciato AP1 Ap1Params.PARAM_REPOSITORY_LIBRARY*/);
                 documentOut = RepUtils.getBLG().docInsert(session,repLibName,documentOut);
 //                session.put(
 //                    AutCFGParamScope.SCOPE_USER_SESSION,
@@ -807,8 +861,8 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 //                Mail di Umberto Uderzo del 26.05.2016
 //                """""
 //                Buongiorno Alberto,
-//                Se valorizzi il tutto lato server e la stampa Ë molto rapida, il callback che forza il reload della
-//                cache lato client potrebbe arrivare in ritardo. Forse Ë il caso di rivedere il meccanismo.
+//                Se valorizzi il tutto lato server e la stampa √® molto rapida, il callback che forza il reload della
+//                cache lato client potrebbe arrivare in ritardo. Forse √® il caso di rivedere il meccanismo.
 //                Umberto
 //                """""
 //                quindi persistiamo il dato in DB:
@@ -917,7 +971,9 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
     }
 
 
-    private RpaComposerStartConfiguration getConnectionsString(AutCFGUserSession session, boolean isOdbc, String parameters) throws SagaException {
+    private RpaComposerStartConfiguration getConnectionsString(
+            AutCFGUserSession session, boolean isOdbc, String parameters, boolean isCompoJava
+    ) throws SagaException {
 
         String connectionString = "";
 
@@ -942,7 +998,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         }else{
 
             // provo a leggere i paramtri di connesione dai parametri dell'applicazione. Altrimetni prendo quelli di sistema.
-            // PS Il compositore non supporta la modalit‡ OCI: "jdbc:oracle:oci:@//example.com:5521:bjava21"
+            // PS Il compositore non supporta la modalit√† OCI: "jdbc:oracle:oci:@//example.com:5521:bjava21"
             dsDriver = Ap1Params.getParametroString(session,RpaCostanti.APP_PREFIX, RpaCostanti.PARAMETRO_GLOBALE_JDBC_DRIVER);
             if(dsDriver==null){
                 dsDriver = getDBDriver(session);
@@ -952,7 +1008,6 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             if(dsURL==null){
                 dsURL = cinfo.getUrl();
             }
-
 
             // La connection string deve essere nella forma:
             // "DBMS=JDBC;driverClassName=org.postgresql.Driver;url=jdbc:postgresql://localhost:5432;UID=soncino;PWD=soncino"
@@ -976,7 +1031,35 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             log.debug( "Costruisco la connection string: " + connectionStringDebug );
         }
 
-        return new RpaComposerStartConfiguration(
+        Long limitMemorySize = Ap1Params.getParametroLong(session, RpaCostanti.APP_PREFIX, RpaCostanti.PARAMETRO_GLOBALE_LIMIT_SIZE_KB);
+
+        if (limitMemorySize == null || limitMemorySize <= 0) {
+
+            log.error("Il parametro √® stato CANCELLATO o E' SBAGLIATO, reimposto quello di DEFAULT (" + RpaCostanti.LIMIT_SIZE_DEFAULT_KB + " KB)");
+            session.put(
+                    AutCFGParamScope.SCOPE_GLOBAL,
+                    RpaCostanti.APP_PREFIX,
+                    RpaCostanti.PARAMETRO_GLOBALE_LIMIT_SIZE_KB,
+                    RpaCostanti.LIMIT_SIZE_DEFAULT_KB.toString()
+            );
+            limitMemorySize = RpaCostanti.LIMIT_SIZE_DEFAULT_KB;
+
+        }
+
+        // Recupero il parametro di utilizzo dei parametri DB
+        boolean isForceUseDbParameters = false;
+        String isForceUseDbParametersString = (String) session.get(
+                AutCFGParamScope.SCOPE_GLOBAL, RpaCostanti.APP_PREFIX,
+                RpaCostanti.PARAMETRO_GLOBALE_IS_FORCE_USE_DB_PARAMETERS
+        );
+
+        if (isForceUseDbParametersString != null && !isForceUseDbParametersString.isEmpty()) {
+
+            isForceUseDbParameters = !isForceUseDbParametersString.equals("0");
+
+        }
+
+        RpaComposerStartConfiguration composerStartConfiguration = new RpaComposerStartConfiguration(
             odbcDbName,
             dsDriver,
             dsURL,
@@ -992,8 +1075,19 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
             log.isDebugEnabled(),
             log.isWarnEnabled(),
             log.isErrorEnabled(),
-            new RpaImportExternalImageDocumentale(session)
+            new RpaImportExternalImageDocumentale(session),
+            limitMemorySize,
+            isForceUseDbParameters
         );
+
+        // Mi raccomando!!! Chiudere la sessione Hibernate E NON quella di JDBC dopo l'avvio del compositore!
+        if (isCompoJava) {
+
+            composerStartConfiguration.setConnection(getCdtHibernateSession(session));
+
+        }
+
+        return composerStartConfiguration;
 
     }
 
@@ -1025,7 +1119,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         String parametriSessione,
         String nomeFileModello,
         RpaComposerStartConfiguration compoConf,
-        Boolean forceCompoJava
+        boolean isCompoJava
     ) throws SagaException,IOException,InterruptedException {
 
         //prima controllo a livello di utente, poi a livello
@@ -1042,16 +1136,6 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                 RpaCostanti.APP_PREFIX,
                 RpaCostanti.PARAMETRO_GLOBALE_WS_URL
             );
-        }
-        boolean isCompoJava = compoConf!=null && Ap1Params.getParametroBoolean(
-            session,
-            RpaCostanti.APP_PREFIX,
-            RpaCostanti.PARAMETRO_GLOBALE_COMPOSITORE_JAVA
-        );
-
-        if(forceCompoJava!=null){
-            // isCompoJava = isCompoJava || forceCompoJava.booleanValue();
-            isCompoJava = forceCompoJava;
         }
 
         if(isCompoJava){
@@ -1387,6 +1471,8 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
         Long idRepStampa = null;
 
+        RpaComposerStartConfiguration compoConf = null;
+
         try {
             try {
 
@@ -1410,7 +1496,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                 }
 
                 File tempInputFile           = new File(urlModello)  ;
-                File tempOutputFileRequested = RpaUtils.createTempFile( "compo_", "_out"   , esCompoTemporary ); // questo serve perchË altriemnti viene fuori casino
+                File tempOutputFileRequested = RpaUtils.createTempFile( "compo_", "_out"   , esCompoTemporary ); // questo serve perch√® altriemnti viene fuori casino
                 File tempOutputFileProduced  = new File( tempOutputFileRequested.getAbsoluteFile() + "." + extFileModello );
 
                 // questi sono i file di appoggio che il compo crea al runtime
@@ -1455,7 +1541,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     // -f  Lettura dei comandi da file
 
 
-                    // in linux l'apice doppio crea dei problemi se nella stringa c'Ë un nome di una variabile
+                    // in linux l'apice doppio crea dei problemi se nella stringa c'√® un nome di una variabile
                     String apice = "\"";
                     if (!CmnUtils.isWindows()){
                         apice="'";
@@ -1476,8 +1562,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     parametriSessione += "86=" + session.getLogonUser().getPkid() + ";";
                     parametriSessione += "81=" + CdtBLGServerUtils.getDBType(session.getJ2eeUserName());
 
-
-                    RpaComposerStartConfiguration compoConf = getConnectionsString(session, isOdbc, parametriSessione);
+                    compoConf = getConnectionsString(session, isOdbc, parametriSessione, compoJava);
 
 
                     //    in windows uso il percorso completo altrimenti va in errore
@@ -1547,6 +1632,9 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                             }
                         }
                     }
+                    if(compoConf!=null && compoConf.getConnection()!=null){
+                        this.closeHibernateSessionBoundWithUserSession(compoConf.getConnection());
+                    }
                 }
 
             }catch( IOException exc ) {
@@ -1603,11 +1691,11 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     nomeFile = nomeDoc.substring(0, idx);
                     estFile = nomeDoc.substring(idx);
                 }else{
-                    // se il nome del file Ë malformato lo fisso
+                    // se il nome del file √® malformato lo fisso
                     nomeFile = "modello";
                 }
             }else{
-                // se il nome del file Ë malformato lo fisso
+                // se il nome del file √® malformato lo fisso
                 nomeFile = "modello";
             }
 
@@ -1641,7 +1729,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
     }
 
     private boolean isAddToDocColl(RpaRunCompositoreParams params){
-        // utilizzato questo metodo per retrocompatibilit‡
+        // utilizzato questo metodo per retrocompatibilit√†
         // se il nuovo parametro non viene gestito, va ad utilizzare quello "vecchio"
         String val = params.getValore(RpaCostanti.PARAMETRO_SALVA_IN_DOC_COLLEGATI);
         if(val==null){
@@ -1652,7 +1740,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
 
     private Long getIdSessionCompo(AutCFGUserSession session) throws AutEXCSessionException {
-        //A.M.l'id sessione Ë troppo grande compngo un numero dato:
+        //A.M.l'id sessione √® troppo grande compngo un numero dato:
         // dall'utente corrente + le ultime tre cifre dell'id sessione(new Long( session.getSessionID()%1000), 3);
         return new Long(
             session.getLogonUser().getPkid().longValue()*1000
@@ -1710,7 +1798,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                         try{
                             //http://serverfault.com/questions/27887/how-to-sort-ps-output-by-process-start-time
                             processInfoLinux = Runtime.getRuntime().exec(new String[]{RpaUtils.getShell(),"-c","ps -A --sort=start_time | grep compo_jdbc"},null);
-                            //ottengo i processi ordinati per data avvio crescente - in caso di pi˘ di uno prendo l'ultimo
+                            //ottengo i processi ordinati per data avvio crescente - in caso di pi√π di uno prendo l'ultimo
                             brco = new BufferedReader( new InputStreamReader( processInfoLinux.getInputStream() ) );
                             String line;
                             while( (line = brco.readLine()) != null) {
@@ -1755,7 +1843,7 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
                     // https://msdn.microsoft.com/en-us/library/aa394372(v=vs.85).aspx
                     // https://technet.microsoft.com/en-us/library/cc757287(v=ws.10).aspx
                     processInfoWin = CmnUtils.execute("wmic process where \"name='" + eseguibile + "'\" get ProcessID, Commandline /format:list:\"sortby=CreationDate\"");
-                    //ottengo i processi ordinati per data avvio crescente - in caso di pi˘ di uno prendo l'ultimo
+                    //ottengo i processi ordinati per data avvio crescente - in caso di pi√π di uno prendo l'ultimo
                     brco = new BufferedReader( new InputStreamReader( processInfoWin.getInputStream() ) );
                     String line;
                     while( (line = brco.readLine()) != null ) {
@@ -1945,7 +2033,8 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         Map mappa = AutClusterCache.getCache(
             session.getJ2eeUserName(),
             Ap1Costanti.APP_PREFIX_APE,
-            RpaCostanti.CACHE_LATO_SERVER_RPA
+            RpaCostanti.CACHE_LATO_SERVER_RPA,
+            AutClusterCache.Flavour.LOCAL_BYREF
         );
 
         HashMap<Long,RpaProcessInfo> pidList = (HashMap<Long,RpaProcessInfo>)mappa.get(RpaCostanti.KEY_MAPPING_PID_LIST);
@@ -2025,6 +2114,14 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
 
         }
 
+        // Chiudo la session ad Hibernate (se definita)
+        if (compoConf.getConnection() != null) {
+
+            // compoConf.getConnection().close();
+            this.closeHibernateSessionBoundWithUserSession(compoConf.getConnection());
+
+        }
+
         // TODO: Se ci sono errori di sintassi, ritorno un warning (chiedere a Stefano se fare l'implementazione)
     }
 
@@ -2046,6 +2143,95 @@ public class RpaBLGBean extends CdtBLGPkBaseClassBean{
         return this.readCollectionSQL(session, sqlQuery, new Object[] {});
 
     }
+
+
+    public RepDACDocument eseguiCompositoreByReportLink(
+        AutCFGUserSession session,
+        RptDACReportLink reportLink,
+        RptDACReportParameters params
+    ) throws SagaException {
+
+        RepDACDocument docRep = null;
+
+        RptExecuteParams execParams = new RptExecuteParams();
+
+        RptExecuteReportLinkDescriptor linkDesc = new RptExecuteReportLinkDescriptor(reportLink);
+        linkDesc.setReportParameters(params);
+        execParams.add(linkDesc);
+
+        String nomeFileOutPut = null;
+        File fileTmp = null;
+        try {
+            fileTmp = Ap1Utils.createTempFile("compo_out_web",".rtf");
+        } catch (IOException ioe) {
+            throw CdtUtils.handleIOExceptionAndReturn(ioe, "compo_out_web.rtf");
+        }
+
+        if(fileTmp!=null && fileTmp.isFile()){
+            nomeFileOutPut = fileTmp.getAbsolutePath();
+            // creo il file, mi salvo il nome e poi lo cancello
+            // altrimenti quando faccio new File(nomeFileOutPut)
+            // lo triova gi√† aperto e ci aggiunge un numero al nome
+            //cos√¨ lo ricrea il compositore con il nome giusto
+            fileTmp.delete();
+        }else{
+            new RuntimeException("File non creato, Directory temporanea non scrivibile");
+        }
+
+        log.debug("eseguiCompositoreByReportLink - nomeFileOutPut=" + nomeFileOutPut);
+
+        RptDACReportExecution execution = new RptDACReportExecution(session, Boolean.FALSE);
+        execution.setInteraction(RptDACReportExecution.INTERACTION_NONE);
+        execution.setPrinterParameters(new RptDACPrinterParameters(
+            new Long(RptDACPrinterParameters.OUTPUTTYPE_RTF_FILE),
+            nomeFileOutPut
+        ));
+        execParams.setExecution(execution);
+        params.put(RpaCostanti.GLOBAL_COMPO_PARAM + RpaCostanti.PARAMETRO_NOME_FILE_TMP_OUT,nomeFileOutPut);
+
+        RptExecuteResult res = RptReportEngine.execute(session, execParams);
+
+        if (!res.isEverythingSucceded()) {
+            log.error("Errore durante la creazione della stampa");
+            throw new RuntimeException("Errore durante l'avvio della stampa: " + linkDesc.getReportLinkFullName());
+        }
+
+//        File stampa = new File(nomeFileOutPut);
+//        if(stampa.exists() && stampa.length()>0){
+//            docRep = new RepDACDocument(stampa.getName(),"Risultato Compositore",stampa);
+//            docRep.readFromFile(stampa);
+//
+//            if(!log.isDebugEnabled()){
+//                stampa.delete();
+//            }
+//        }
+
+        Long idRepo = getIdFileReopository(session);
+        if(idRepo!=null){
+            try {
+                docRep = RepUtils.getBLG().readDocument(session,idRepo);
+            } catch (RemoteException re) {
+                throw CdtUtils.handleRemoteExceptionsAndReturn(re);
+            }
+        }
+        //pulisco il file temporaneao creato
+        File stampa = new File(nomeFileOutPut);
+        if(stampa.exists() && stampa.length()>0 && !log.isDebugEnabled()){
+            stampa.delete();
+        }
+
+        return docRep;
+    }
+
+
+    private void addToPraDocuemtniFiles(AutCFGUserSession session,PraDACPraticheDocumenti pd, RepDACDocument document) throws SagaException{
+        PraDACPraticheDocumentiFile pdf = new PraDACPraticheDocumentiFile();
+        pdf.setPraticaDocumento(pd);
+        pdf.setRepDocument(document);
+        pdf.setDes(document.getDocumentDescription());
+        save(session,pdf);
+    }
+
 
 
 }

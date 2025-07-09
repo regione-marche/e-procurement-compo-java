@@ -78,7 +78,29 @@ public class RpaUtils {
         return url;
     }
 
-    //funzione creata perchË non ho il nome del file, ma solo il contenuto
+    public static File getDirFromFile(File file){
+        String url = file.getAbsolutePath();
+        if(url!=null){
+            String separator = "\\";
+            if(CmnUtils.isLinux()){
+                separator = "/";
+            }
+            int idxSeparator = url.lastIndexOf(separator);
+
+            if (idxSeparator >= 0) {
+                url = url.substring(0,idxSeparator);
+            }
+        }
+        return new File(url);
+    }
+
+    public static String getShortUUID(){
+        String uCompleto = UUID.randomUUID().toString();
+        // prendo l'ultima parte del'UUID che dovrebbe essere sufficente per identificarlo in modo univoco
+        return uCompleto.substring(uCompleto.lastIndexOf("-")+1);
+    }
+
+    //funzione creata perch√® non ho il nome del file, ma solo il contenuto
     public static boolean isRtf(RepDACDocument doc){
 
         byte[] dataBuffer = doc.getContent();
@@ -124,7 +146,7 @@ public class RpaUtils {
     }
 
     /**
-     * Ricreata questa funzione da utilizzare solo per il compositore perchË File.createTempFile(...) con CentOS7 a 64bit crea dei nomi file esotici
+     * Ricreata questa funzione da utilizzare solo per il compositore perch√® File.createTempFile(...) con CentOS7 a 64bit crea dei nomi file esotici
      * @param prefix prefisso
      * @param suffix suffisso
      * @param directory cartella dove generare il file
@@ -135,11 +157,8 @@ public class RpaUtils {
 
         int wd = 10; //limite di tentativi
         while(fileOut==null && wd>0){
-            String uCompleto = UUID.randomUUID().toString();
-            // prendo l'ultima parte del'UUID che dovrebbe essere sufficente per identificarlo in modo univoco
-            String uLast = uCompleto.substring(uCompleto.lastIndexOf("-")+1);
-            File file = new File(directory,prefix + uLast + suffix);
-            // verifico che non esisti gi‡, cosa improbabile
+            File file = new File(directory,prefix + getShortUUID() + suffix);
+            // verifico che non esisti gi√†, cosa improbabile
             if(!file.isFile()){
                 fileOut = file;
             }

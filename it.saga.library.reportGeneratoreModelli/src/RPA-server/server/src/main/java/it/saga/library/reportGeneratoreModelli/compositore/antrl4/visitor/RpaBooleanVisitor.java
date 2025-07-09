@@ -153,11 +153,19 @@ public class RpaBooleanVisitor extends RpaIfVisitor {
 
             }
 
-            String          warningMessage  = "Confronto tra " + leftClassName + " e " + rightClassName;
-            RpaWarningType  warningType     = RpaWarningType.DIFFERENT_TYPES_COMPARISON;
+            String infoMessage  =
+                    "[IF] Per la comparazione " + context.getText() +
+                    " vi è un confronto tra TIPI DIVERSI: " +
+                    leftClassName + " e " + rightClassName +
+                    ". Usare le formattazioni!";
 
+            mainCompositore.getDebugMessages().print(infoMessage);
+
+            /*
+            RpaWarningType  warningType     = RpaWarningType.DIFFERENT_TYPES_COMPARISON;
             RpaWarningMessages warningMessages = mainCompositore.getWarningMessages();
-            warningMessages.print(warningType, warningMessage);
+            warningMessages.print(warningType, infoMessage);
+            */
 
             // Controllo se il valore di sinistra è "null"
             if (leftTerm == null) {

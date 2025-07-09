@@ -1370,6 +1370,27 @@ public interface RpaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFormatDomainCapAllText(RpaParser.FormatDomainCapAllTextContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code formatDomainUpperText}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormatDomainUpperText(RpaParser.FormatDomainUpperTextContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code formatDomainHashFile}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormatDomainHashFile(RpaParser.FormatDomainHashFileContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code formatDomainFindHash}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormatDomainFindHash(RpaParser.FormatDomainFindHashContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code prefixFunctionCO}
 	 * labeled alternative in {@link RpaParser#prefixFunction}.
 	 * @param ctx the parse tree

@@ -199,6 +199,12 @@ public class RpaMnemonicSTR extends RpaAbstractMnemonicConstant {
 
                 return Double.valueOf(value);
 
+            // Controllo se ho un double (definito con ",")
+            } else if (RpaNumberUtils.isDoubleWithComma(value)) {
+
+                value = value.replaceAll("\\,", "\\.");
+                return Double.valueOf(value);
+
             // Controllo se ho una data
             } else {
 

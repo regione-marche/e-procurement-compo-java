@@ -2405,6 +2405,42 @@ public class RpaParserBaseListener implements RpaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterFormatDomainUpperText(RpaParser.FormatDomainUpperTextContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFormatDomainUpperText(RpaParser.FormatDomainUpperTextContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFormatDomainHashFile(RpaParser.FormatDomainHashFileContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFormatDomainHashFile(RpaParser.FormatDomainHashFileContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFormatDomainFindHash(RpaParser.FormatDomainFindHashContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFormatDomainFindHash(RpaParser.FormatDomainFindHashContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterPrefixFunctionCO(RpaParser.PrefixFunctionCOContext ctx) { }
 	/**
 	 * {@inheritDoc}

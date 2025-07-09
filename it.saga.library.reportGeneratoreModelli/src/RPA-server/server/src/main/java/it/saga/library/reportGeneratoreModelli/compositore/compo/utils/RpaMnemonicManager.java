@@ -10,11 +10,7 @@ import it.saga.library.reportGeneratoreModelli.compositore.antrl4.visitor.RpaMne
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaComposerConfiguration;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.codes.RpaWarningType;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaComposerException;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaInternalException;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaJoinFailException;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaReachEntityException;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaUpdateMnemonicEntityDataIndexException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.*;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.core.RpaMnemonicEntityData;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.core.RpaMnemonicFields;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.core.RpaMnemonicFieldsComparator;
@@ -76,6 +72,11 @@ public class RpaMnemonicManager {
 
     // Link: https://regex101.com/r/6ICkKu/1
     public static final String EXTENSION_VIEW_REGEX = "^(.*[\\n\\r]*.*)(>>&[0-9]+)$";
+
+    // Link: https://regex101.com/r/A0sxU7/1
+    public static final String NOTE_SPLITTED_REGEX = "^flg_[^_]+_splitted$";
+    // Link: https://regex101.com/r/74x0CG/1
+    public static final String KEY_SPLIT_REGEX = "^([^.]+)\\.([^.]+)\\.([^.]+)\\.(\\d)$";
 
     private static final Map<String, String>    MNEMONIC_TABULATION_MAPPER          = new HashMap<String, String>();
     private static final Map<String, String>    MNEMONIC_TABULATION_QUERY_MAPPER    = new HashMap<String, String>();
@@ -287,7 +288,11 @@ public class RpaMnemonicManager {
 
         }
 
-        String entityFullName = entityNameString + rawEntityFullName.split(entityNameString, 2)[1];
+        String entityFullName = "";
+        Matcher matcher = Pattern.compile("^([^.]+)\\.([^.]+)\\.(.+)$").matcher(rawEntityFullName);
+        matcher.find();
+
+        entityFullName = entityNameString + "." + matcher.group(3);
 
         return entityFullName;
 
@@ -1040,7 +1045,7 @@ public class RpaMnemonicManager {
             }
 
             ResultSetMetaData   resultSetMetaData   = preparedStatement.getMetaData();
-            boolean             isExtensible        = false;
+            // boolean             isExtensible        = false;
             Long                pkid                = null;
 
             if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && isColumnExists(resultSetMetaData, "pkid")) {
@@ -1049,19 +1054,85 @@ public class RpaMnemonicManager {
 
             }
 
-            for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
+            // Controllo se il dato è espandibile
+            /*
+            String flgSplitFieldName = null;
 
-                String  columnName  = resultSetMetaData.getColumnName(columnIndex);
-                String  columnValue = resultSet.getString(columnIndex);
+            String splitFieldSqlString = "" +
+                    "SELECT c0c_id_split AS key_split " +
+                    "FROM   rpa_c0campi " +
+                    "WHERE  c0c_mne_ber LIKE ?";
 
-                if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+            PreparedStatement preparedStatementSplitField = dbConnection.prepareStatement(splitFieldSqlString);
+            preparedStatementSplitField.setString(1, "%" + leftMnemonicName + "%");
+            ResultSet resultSetSplitField = preparedStatementSplitField.getResultSet();
 
-                    isExtensible = columnValue != null && columnValue.equals("1");
-                    break;
+            if (resultSetSplitField.next()) {
+
+                String keySplit = resultSetSplitField.getString("key_split");
+                Matcher keySplitMatcher = Pattern.compile(KEY_SPLIT_REGEX).matcher(keySplit);
+
+                if (keySplitMatcher.find()) {
+
+                    flgSplitFieldName = keySplitMatcher.group(3);
 
                 }
 
             }
+
+            if (flgSplitFieldName == null) {
+
+                isExtensible = false;
+
+            } else {
+
+                for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex++) {
+
+                    String columnName = resultSetMetaData.getColumnName(columnIndex);
+                    String columnValue = resultSet.getString(columnIndex);
+                    Integer columnType = resultSetMetaData.getColumnType(columnIndex);
+
+                    // if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // NOTE_SPLITTED_REGEX
+                    if (columnName.equalsIgnoreCase(flgSplitFieldName)) {
+
+                        // Controllo se la colonna del DB è di tipo "string" o "boolean"
+                        switch (columnType) {
+                            case Types.VARCHAR:
+                            case Types.LONGVARCHAR:
+
+                                isExtensible = columnValue != null && columnValue.equals("1");
+
+                                break;
+
+                            case Types.BOOLEAN:
+
+                                isExtensible = Boolean.parseBoolean(columnValue);
+
+                                break;
+
+                            case Types.TINYINT:
+
+                                isExtensible = Integer.parseInt(columnValue) == 1;
+
+                                break;
+
+                            case Types.BIT:
+
+                                isExtensible = "t".equals(columnValue);
+
+                                break;
+
+                        }
+
+                        break;
+
+                    }
+
+                }
+
+            }
+            */
 
             for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
 
@@ -1089,11 +1160,11 @@ public class RpaMnemonicManager {
 
                 if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && pkid != null) {
 
-                    newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, leftTableName, leftTableDomain, pkid, isExtensible);
+                    newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, leftTableName, leftTableDomain, pkid/*, isExtensible */);
 
                 } else {
 
-                    newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, leftTableName, leftTableDomain, isExtensible);
+                    newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, leftTableName, leftTableDomain/*, isExtensible */);
 
                 }
 
@@ -1163,7 +1234,7 @@ public class RpaMnemonicManager {
                 Map<String, Integer>        mnemonicFieldsTypeMap   = new HashMap<String, Integer>();
 
                 Long    pkid            = null;
-                boolean isExtensible    = false;
+                // boolean isExtensible    = false;
 
                 if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && isColumnExists(resultSetMetaData, "pkid")) {
 
@@ -1171,19 +1242,52 @@ public class RpaMnemonicManager {
 
                 }
 
+                /*
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
 
                     String  columnName  = resultSetMetaData.getColumnName(columnIndex);
                     String  columnValue = resultSet.getString(columnIndex);
+                    Integer columnType  = resultSetMetaData.getColumnType(columnIndex);
 
-                    if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // NOTE_SPLITTED_REGEX
+                    if (columnName.matches(flgSplitFieldName)) {
 
-                        isExtensible = columnValue != null && columnValue.equals("1");
+                        // Controllo se la colonna del DB è di tipo "string" o "boolean"
+                        switch (columnType) {
+                            case Types.VARCHAR:
+                            case Types.LONGVARCHAR:
+
+                                isExtensible = columnValue != null && columnValue.equals("1");
+
+                                break;
+
+                            case Types.BOOLEAN:
+
+                                isExtensible = Boolean.parseBoolean(columnValue);
+
+                                break;
+
+                            case Types.TINYINT:
+
+                                isExtensible = Integer.parseInt(columnValue) == 1;
+
+                                break;
+
+                            case Types.BIT:
+
+                                isExtensible = "t".equals(columnValue);
+
+                                break;
+
+                        }
+
                         break;
 
                     }
 
                 }
+                */
 
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex++) {
 
@@ -1211,11 +1315,11 @@ public class RpaMnemonicManager {
 
                     if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && pkid != null) {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, root.getEntityTableName(), root.getEntityDomain(), pkid, isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, root.getEntityTableName(), root.getEntityDomain(), pkid/*, isExtensible */);
 
                     } else {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, root.getEntityTableName(), root.getEntityDomain(), isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, root.getEntityTableName(), root.getEntityDomain()/*, isExtensible */);
 
                     }
 
@@ -1303,7 +1407,7 @@ public class RpaMnemonicManager {
                 Map<String, Integer>        mnemonicFieldsTypeMap   = new HashMap<String, Integer>();
 
                 Long    pkid            = null;
-                boolean isExtensible    = false;
+                // boolean isExtensible    = false;
 
                 if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && isColumnExists(resultSetMetaData, "pkid")) {
 
@@ -1311,19 +1415,52 @@ public class RpaMnemonicManager {
 
                 }
 
+                /*
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
 
                     String  columnName  = resultSetMetaData.getColumnName(columnIndex);
                     String  columnValue = resultSet.getString(columnIndex);
+                    Integer columnType  = resultSetMetaData.getColumnType(columnIndex);
 
-                    if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // NOTE_SPLITTED_REGEX
+                    if (columnName.matches(flgSplitFieldName)) {
 
-                        isExtensible = columnValue != null && columnValue.equals("1");
+                        // Controllo se la colonna del DB è di tipo "string" o "boolean"
+                        switch (columnType) {
+                            case Types.VARCHAR:
+                            case Types.LONGVARCHAR:
+
+                                isExtensible = columnValue != null && columnValue.equals("1");
+
+                                break;
+
+                            case Types.BOOLEAN:
+
+                                isExtensible = Boolean.parseBoolean(columnValue);
+
+                                break;
+
+                            case Types.TINYINT:
+
+                                isExtensible = Integer.parseInt(columnValue) == 1;
+
+                                break;
+
+                            case Types.BIT:
+
+                                isExtensible = "t".equals(columnValue);
+
+                                break;
+
+                        }
+
                         break;
 
                     }
 
                 }
+                */
 
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex++) {
 
@@ -1352,11 +1489,11 @@ public class RpaMnemonicManager {
 
                     if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && pkid != null) {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, mnemonicEntityData.getName(), mnemonicEntityData.getDomain(), pkid, isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, mnemonicEntityData.getName(), mnemonicEntityData.getDomain(), pkid/*, isExtensible */);
 
                     } else {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, mnemonicEntityData.getName(), mnemonicEntityData.getDomain(), isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, columnValue, columnName, mnemonicEntityData.getName(), mnemonicEntityData.getDomain()/*, isExtensible */);
 
                     }
 
@@ -1785,7 +1922,7 @@ public class RpaMnemonicManager {
             */
             mnemonicEntityData.setMnemonicGraphRootCondition("");
 
-            String          warningMessage  = "Confronto tra campi di " + mnemonicEntityName + " e null";
+            String          warningMessage  = "[JOIN] Confronto tra campi di " + mnemonicEntityName + " e null";
             RpaWarningType  warningType     = RpaWarningType.JOIN_ON_NULL;
 
             RpaWarningMessages warningMessages = mainCompositore.getWarningMessages();
@@ -1806,8 +1943,8 @@ public class RpaMnemonicManager {
 
             sqlQuery =
                     "SELECT * " +
-                            "FROM   " + mnemonicEntityName + " " +
-                            "WHERE  " + sqlWhereCondition;
+                    "FROM   " + mnemonicEntityName + " " +
+                    "WHERE  " + sqlWhereCondition;
 
             mnemonicEntityData.setMnemonicGraphRootCondition(sqlWhereCondition);
 
@@ -1891,7 +2028,7 @@ public class RpaMnemonicManager {
                     if (mnemonicSqlValue == null || mnemonicSqlValue.isEmpty()) {
 
                         // Non faccio niente
-                        String      warningMessage  = "Confronto tra " + mnemonicNameList.get(i) + " e null";
+                        String      warningMessage  = "[JOIN] Confronto tra " + mnemonicNameList.get(i) + " e null";
                         RpaWarningType warningType  = RpaWarningType.JOIN_ON_NULL;
 
                         RpaWarningMessages warningMessages = mainCompositore.getWarningMessages();
@@ -1987,8 +2124,8 @@ public class RpaMnemonicManager {
             // Eseguo la query
             sqlQuery =
                     "SELECT * " +
-                            "FROM   " + mnemonicEntityName + " " +
-                            whereSql;
+                    "FROM   " + mnemonicEntityName + " " +
+                    whereSql;
 
             // Salvo la condizione "WHERE" nel "MnemonicEntityData"
             String filteredWhereCondition = whereSql.replaceAll("WHERE", "");
@@ -2042,7 +2179,7 @@ public class RpaMnemonicManager {
                 RpaMnemonicFields mnemonicFields;
 
                 Long    pkid            = null;
-                boolean isExtensible    = false;
+                // boolean isExtensible    = false;
 
                 if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && isColumnExists(resultSetMetaData, "pkid")) {
 
@@ -2050,19 +2187,52 @@ public class RpaMnemonicManager {
 
                 }
 
+                /*
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
 
                     String  columnName  = resultSetMetaData.getColumnName(columnIndex);
                     String  columnValue = resultSet.getString(columnIndex);
+                    Integer columnType  = resultSetMetaData.getColumnType(columnIndex);
 
-                    if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                    // NOTE_SPLITTED_REGEX
+                    if (columnName.matches(flgSplitFieldName)) {
 
-                        isExtensible = columnValue != null && columnValue.equals("1");
+                        // Controllo se la colonna del DB è di tipo "string" o "boolean"
+                        switch (columnType) {
+                            case Types.VARCHAR:
+                            case Types.LONGVARCHAR:
+
+                                isExtensible = columnValue != null && columnValue.equals("1");
+
+                                break;
+
+                            case Types.BOOLEAN:
+
+                                isExtensible = Boolean.parseBoolean(columnValue);
+
+                                break;
+
+                            case Types.TINYINT:
+
+                                isExtensible = Integer.parseInt(columnValue) == 1;
+
+                                break;
+
+                            case Types.BIT:
+
+                                isExtensible = "t".equals(columnValue);
+
+                                break;
+
+                        }
+
                         break;
 
                     }
 
                 }
+                */
 
                 for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex ++) {
 
@@ -2090,11 +2260,11 @@ public class RpaMnemonicManager {
 
                     if (mainCompositore.getComposerConfiguration().isStartFromSicraweb() && pkid != null) {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, fieldValue, fieldName, mnemonicEntityName, mnemonicEntityData.getDomain(), pkid, isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, fieldValue, fieldName, mnemonicEntityName, mnemonicEntityData.getDomain(), pkid/*, isExtensible */);
 
                     } else {
 
-                        newMnemonic = new RpaMnemonic(mainCompositore, fieldValue, fieldName, mnemonicEntityName, mnemonicEntityData.getDomain(), isExtensible);
+                        newMnemonic = new RpaMnemonic(mainCompositore, fieldValue, fieldName, mnemonicEntityName, mnemonicEntityData.getDomain()/*, isExtensible */);
 
                     }
 
@@ -3324,80 +3494,140 @@ public class RpaMnemonicManager {
 
     }
 
-    public boolean isMnemonicExtensible(RpaMnemonic mnemonic, String value) {
+    public boolean isMnemonicExtensible(
+            String domain, String tableName, String fieldName, Long primaryKey
+    ) throws RpaInvalidFormatException {
 
-        if (true) {
+        if (
+            domain == null || domain.equals("") ||
+            tableName == null || tableName.equals("") ||
+            fieldName == null || fieldName.equals("")
+        ) {
+
             return false;
+
         }
 
-        // Verifico se la riga del mnemonico è estensibile
-        boolean isMnemonicExtensible = false;
+        String filterKey = fieldName.toUpperCase() + "." + tableName.toUpperCase() + "." + domain.toUpperCase();
 
         try {
 
-            String sqlTableName     = mnemonic.getTable();
-            String sqlQueryString   = "" +
-                    "SELECT flg_note_splitted " +
-                    "FROM   " + sqlTableName + " " +
-                    "WHERE  pkid LIKE ?";
+            // Recupero i dati sulla expandibilità del campo
+            boolean isExtensible = false;
+            String flgSplitFieldName = null;
 
-            PreparedStatement preparedStatement = dbConnection.prepareStatement(sqlQueryString);
-            preparedStatement.setLong(1, mnemonic.getPrimaryKey());
-            ResultSet resultSet = preparedStatement.executeQuery();
+            String splitFieldSqlString = "" +
+                    "SELECT c0c_id_split AS key_split " +
+                    "FROM   rpa_c0campi " +
+                    "WHERE  c0c_mne_uni LIKE ?";
 
-            resultSet.next();
-            String splitIndex       = null;
-            isMnemonicExtensible    = splitIndex != null && splitIndex.equals("1");
+            PreparedStatement preparedStatementSplitField = dbConnection.prepareStatement(splitFieldSqlString);
+            preparedStatementSplitField.setString(1, "%" + filterKey + "%");
+            ResultSet resultSetSplitField = preparedStatementSplitField.executeQuery();
 
-            if (mainCompositore.getComposerConfiguration().getDBType() == RpaComposerConfiguration.TYPE_MSQL) {
+            if (resultSetSplitField != null && resultSetSplitField.next()) {
 
-                splitIndex = resultSet.getString("FLG_NOTE_SPLITTED");
+                String keySplit = resultSetSplitField.getString("key_split");
 
-            } else {
+                if (keySplit != null && !keySplit.equals("")) {
 
-                splitIndex = resultSet.getString("flg_note_splitted");
+                    Matcher keySplitMatcher = Pattern.compile(KEY_SPLIT_REGEX).matcher(keySplit);
+
+                    if (keySplitMatcher.find()) {
+
+                        flgSplitFieldName = keySplitMatcher.group(3);
+
+                    }
+
+                }
 
             }
 
-        } catch (SQLException sqlException) {
+            preparedStatementSplitField.close();
 
-            sqlException.printStackTrace();
+            if (flgSplitFieldName == null) {
 
-            int context = RpaComposerException.COMPILE_MESSAGE;
-            throw new RpaInternalException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), context, sqlException);
+                isExtensible = false;
+
+            } else {
+
+                String checkFieldExpandedSqlString = "" +
+                        "SELECT * " +
+                        "FROM   " + tableName.toLowerCase() + " " +
+                        "WHERE  pkid = ? ";
+
+                PreparedStatement preparedStatement = dbConnection.prepareStatement(checkFieldExpandedSqlString);
+                preparedStatement.setLong(1, primaryKey);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                ResultSetMetaData resultSetMetaData = preparedStatement.getMetaData();
+
+                if (resultSet != null && resultSet.next()) {
+
+                    for (int columnIndex = 1; columnIndex <= resultSetMetaData.getColumnCount(); columnIndex++) {
+
+                        String columnName = resultSetMetaData.getColumnName(columnIndex);
+                        String columnValue = resultSet.getString(columnIndex);
+                        Integer columnType = resultSetMetaData.getColumnType(columnIndex);
+
+                        // if (columnName.equalsIgnoreCase("flg_note_splitted")) {
+                        // NOTE_SPLITTED_REGEX
+                        if (columnName.equalsIgnoreCase(flgSplitFieldName)) {
+
+                            // Controllo se la colonna del DB è di tipo "string" o "boolean"
+                            switch (columnType) {
+                                case Types.VARCHAR:
+                                case Types.LONGVARCHAR:
+
+                                    isExtensible = columnValue != null && columnValue.equals("1");
+
+                                    break;
+
+                                case Types.BOOLEAN:
+
+                                    isExtensible = Boolean.parseBoolean(columnValue);
+
+                                    break;
+
+                                case Types.TINYINT:
+
+                                    isExtensible = Integer.parseInt(columnValue) == 1;
+
+                                    break;
+
+                                case Types.BIT:
+
+                                    isExtensible = "t".equals(columnValue);
+
+                                    break;
+
+                            }
+
+                            break;
+
+                        }
+
+                    }
+
+                }
+
+                preparedStatement.close();
+
+            }
+
+            return isExtensible;
+
+        } catch (SQLException exception) {
+
+            mainCompositore.getDebugMessages().print(RpaComposerException.COMPILE_MESSAGE, exception.getMessage());
+            System.err.println(exception);
+
+            String code     = filterKey;
+            String message  = "Errore durante la lettura il controllo di estensione dell'entità con chiave " + primaryKey;
+            int context     = RpaComposerException.COMPILE_MESSAGE;
+
+            throw new RpaInvalidFormatException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), context, code, message);
 
         }
-
-        // Verifico se esiste una tabella di estensione
-        boolean isExtensibleTableExists = false;
-
-        try {
-
-            String              tableNamePattern    = mnemonic.getTable().toLowerCase() + "_split";
-            DatabaseMetaData    databaseMetaData    = dbConnection.getMetaData();
-            ResultSet           resultSet           = databaseMetaData.getTables(
-                    null,
-                    null,
-                    tableNamePattern,
-                    null
-            );
-
-            isExtensibleTableExists = resultSet.next();
-
-        } catch (SQLException sqlException) {
-
-            sqlException.printStackTrace();
-
-            int context = RpaComposerException.COMPILE_MESSAGE;
-            throw new RpaInternalException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), context, sqlException);
-
-        }
-
-        // Verifico se il valore ha almeno 2000 caratteri
-        boolean hasValueLength2000 = value != null && value.length() == 2000;
-
-        // Tutte le condizioni di estensibilità devono essere rispettate
-        return isMnemonicExtensible && isExtensibleTableExists && hasValueLength2000;
 
     }
 
@@ -3427,14 +3657,17 @@ public class RpaMnemonicManager {
 
         }
 
-        // Recupero il nome della colonna che permetta di filtrare la tabella "split" per pkid
-        String foreignFieldName = "";
+        // Recupero:
+        //      - Il nome della colonna che permetta di filtrare la tabella "split" per pkid
+        //      - Il nome della tabella di split
+        //      - Il nome della colonna "flg_..._splitted" per verificare se il singolo dato è stato espanso
+        String keySplit = "";
 
         try {
 
             String sqlFieldFilter = mnemonic.getFieldTable().toUpperCase() + "." + mnemonic.getTable().toUpperCase() + "%";
             String sqlQueryString = "" +
-                    "SELECT c0c_id_split AS foreign_key_split " +
+                    "SELECT c0c_id_split AS key_split " +
                     "FROM   rpa_c0campi " +
                     "WHERE  c0c_mne_uni LIKE ?";
 
@@ -3443,7 +3676,9 @@ public class RpaMnemonicManager {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             resultSet.next();
-            foreignFieldName = resultSet.getString("foreign_key_split");
+            keySplit = resultSet.getString("key_split");
+
+            preparedStatement.close();
 
         } catch (SQLException sqlException) {
 
@@ -3453,31 +3688,149 @@ public class RpaMnemonicManager {
 
         }
 
+        String foreignFieldName = "";
+        String tableName = "";
+
+        if (keySplit == null || keySplit.equals("")) {
+
+            return value;
+
+        } else {
+
+            Matcher keySplitMatcher = Pattern.compile(KEY_SPLIT_REGEX).matcher(keySplit);
+
+            if (keySplitMatcher.find()) {
+
+                tableName           = keySplitMatcher.group(1);
+                foreignFieldName    = keySplitMatcher.group(2);
+
+            }
+
+        }
+
+        // Recupero il nome della colonna di ordinamento per le estensioni ('numord' o 'prog')
+        // Inoltre verifico se la tabella ha dei filtri aggiuntivi (ossia ha la colonna 'campo')
+        // String tableName        = mnemonic.getTable().toLowerCase() + "_split";
+        String columnNameOrder  = null;
+        String sqlExtraFilter   = null;
+
+        try {
+
+            String sqlQueryString   = "" +
+                    "SELECT * " +
+                    "FROM   " + tableName;
+
+            PreparedStatement preparedStatement = dbConnection.prepareStatement(sqlQueryString);
+            ResultSetMetaData resultSetMetaData = preparedStatement.getMetaData();
+
+            for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
+
+                String columnName = resultSetMetaData.getColumnName(i);
+
+                if ("numord".equals(columnName) || "prog".equals(columnName)) {
+
+                    columnNameOrder = columnName;
+
+                }
+
+                if ("campo".equals(columnName)) {
+
+                    sqlExtraFilter = " campo = ? ";
+
+                }
+
+                if (columnNameOrder != null && sqlExtraFilter != null) {
+
+                    break;
+
+                }
+
+            }
+
+            if (columnNameOrder == null) {
+
+                throw new SQLException(
+                        "Non è stata trovata nessun colonna di ordinamento ('numord' o 'prog') in " +
+                        tableName
+                );
+
+            }
+
+            preparedStatement.close();
+
+        } catch (SQLException sqlException) {
+
+            mainCompositore.getWarningMessages().print(RpaWarningType.WRONG_SQL_QUERY, sqlException.getMessage());
+            return value;
+
+        }
+
         // Recupero tutte le estensioni del valore ordinate per "numord"
         List<String> extensions = new ArrayList<String>();
 
         try {
 
-            String tableName        = mnemonic.getTable().toLowerCase() + "_split";
             String sqlQueryString   = "" +
-                    "SELECT note " +
+                    "SELECT * " +
                     "FROM   " + tableName + " " +
-                    "WHERE  " + foreignFieldName + " = ? " +
-                    "ORDER BY numord";
+                    "WHERE  " + foreignFieldName + " = ? ";
+
+            // Se ho un filtro extra sul campo, lo aggiungo alla query
+            if (sqlExtraFilter != null) {
+
+                sqlQueryString += " AND " + sqlExtraFilter;
+
+            }
+
+            sqlQueryString += " ORDER BY " + columnNameOrder;
 
             PreparedStatement preparedStatement = dbConnection.prepareStatement(sqlQueryString);
             preparedStatement.setLong(1, mnemonic.getPrimaryKey());
-            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (sqlExtraFilter != null) {
+
+                preparedStatement.setString(2, mnemonic.getFieldTable());
+
+            }
+
+            ResultSet resultSet                 = preparedStatement.executeQuery();
+            ResultSetMetaData resultSetMetaData = preparedStatement.getMetaData();
 
             String debugPrefix  = "[Mnemonic Extend] ";
             String debugMessage = sqlQueryString.replaceAll("\\?", mnemonic.getPrimaryKey().toString());
             mainCompositore.getDebugMessages().print(debugPrefix + debugMessage);
 
-            while (resultSet.next()) {
+            // Ritrovo la colonna con nome "note" o "text"
+            String columnNameFound = null;
 
-                extensions.add(resultSet.getString("note"));
+            for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
+
+                String columnName = resultSetMetaData.getColumnName(i);
+
+                if (columnName.equals("note") || columnName.equals("text")) {
+
+                    columnNameFound = columnName;
+                    break;
+
+                }
+
 
             }
+
+            if (columnNameFound == null) {
+
+                throw new SQLException("Nessuna colonna 'note' o 'text' trovata in " + tableName);
+
+            }
+
+            // Recupero i dati
+            while (resultSet.next()) {
+
+                extensions.add(resultSet.getString(columnNameFound));
+
+            }
+
+            preparedStatement.close();
 
         } catch (SQLException sqlException) {
 
@@ -3514,7 +3867,83 @@ public class RpaMnemonicManager {
 
         }
 
+        // Formatto i caratteri a capo
+        value = value.replaceAll("([^\r\n])\n([^\r\n])", "$1\n\r$2");
+
         // Restituisco la concatenazione
+        return value;
+
+    }
+
+    public String removeSquareBrackets(RpaMnemonic mnemonic, String value) {
+
+        try {
+
+            // Verifico di avere il mnemonico e la stringa
+            if (mnemonic == null || value == null || value.isEmpty()) {
+
+                return value;
+
+            }
+
+            // Controllo che il valore a stringa abbia le parentesti quadre
+            if (!Pattern.compile("^\\[[^]]+\\]$", Pattern.MULTILINE).matcher(value).find()) {
+
+                return value;
+
+            }
+
+            // Se il mnemonico è estensibile, esco
+            if (mnemonic.isExtensible()) {
+
+                return value;
+
+            }
+
+            // Recupero lo "c0c_id_split" (che indica se applicare questa formattazione)
+            String sqlFieldFilter = mnemonic.getFieldTable().toUpperCase() + "." + mnemonic.getTable().toUpperCase() + "%";
+            String sqlQueryString = "" +
+                    "SELECT c0c_id_split AS key_split " +
+                    "FROM   rpa_c0campi " +
+                    "WHERE  c0c_mne_uni LIKE ?";
+
+            PreparedStatement preparedStatement = dbConnection.prepareStatement(sqlQueryString);
+            preparedStatement.setString(1, sqlFieldFilter);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            resultSet.next();
+            String keySplit = resultSet.getString("key_split");
+
+            // Controllo se la stringa è vuota
+            if (keySplit == null || keySplit.isEmpty()) {
+
+                return value;
+
+            }
+
+            // Se devo applicare questa formattazione (suffisso di "c0c_id_split" a 1) rimuovo le parentesi quadre
+            Matcher matcher = Pattern.compile(KEY_SPLIT_REGEX).matcher(keySplit);
+
+            if (matcher.find() && matcher.group(4).equals("1")) {
+
+                matcher = Pattern.compile(EXTENSION_SQUARE_REGEX).matcher(value);
+
+                if (matcher.find()) {
+
+                    return matcher.group(2);
+
+                }
+
+            }
+
+        } catch (SQLException sqlException) {
+
+            mainCompositore.getWarningMessages().print(RpaWarningType.WRONG_SQL_QUERY, sqlException.getMessage());
+
+            return value;
+
+        }
+
         return value;
 
     }

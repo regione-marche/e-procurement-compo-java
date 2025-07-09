@@ -2327,6 +2327,42 @@ public interface RpaParserListener extends ParseTreeListener {
 	 */
 	void exitFormatDomainCapAllText(RpaParser.FormatDomainCapAllTextContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code formatDomainUpperText}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void enterFormatDomainUpperText(RpaParser.FormatDomainUpperTextContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code formatDomainUpperText}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void exitFormatDomainUpperText(RpaParser.FormatDomainUpperTextContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code formatDomainHashFile}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void enterFormatDomainHashFile(RpaParser.FormatDomainHashFileContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code formatDomainHashFile}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void exitFormatDomainHashFile(RpaParser.FormatDomainHashFileContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code formatDomainFindHash}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void enterFormatDomainFindHash(RpaParser.FormatDomainFindHashContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code formatDomainFindHash}
+	 * labeled alternative in {@link RpaParser#formatDomain}.
+	 * @param ctx the parse tree
+	 */
+	void exitFormatDomainFindHash(RpaParser.FormatDomainFindHashContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code prefixFunctionCO}
 	 * labeled alternative in {@link RpaParser#prefixFunction}.
 	 * @param ctx the parse tree

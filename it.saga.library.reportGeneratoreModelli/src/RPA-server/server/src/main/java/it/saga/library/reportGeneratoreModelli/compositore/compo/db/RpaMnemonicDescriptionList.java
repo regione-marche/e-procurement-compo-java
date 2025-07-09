@@ -47,7 +47,7 @@ public class RpaMnemonicDescriptionList {
 				while (resultSet.next()) {
 
 					MnemonicDescription mnemonicDescription = new MnemonicDescription();
-					mnemonicDescription.setEnable(resultSet.getString("enable").equals("E"));
+					mnemonicDescription.setEnable("E".equals(resultSet.getString("enable")));
 					mnemonicDescription.setP(resultSet.getString("p"));
 					mnemonicDescription.setPath(resultSet.getString("path"));
 					mnemonicDescription.setMnemonico(resultSet.getString("mnemonico"));

@@ -1,0 +1,27 @@
+<!-- Use this file to deploy some handlers/chains and services      -->
+<!-- Two ways to do this:                                           -->
+<!--   java org.apache.axis.client.AdminClient deploy.wsdd          -->
+<!--      after the axis server is running                          -->
+<!-- or                                                             -->
+<!--   java org.apache.axis.utils.Admin client|server deploy.wsdd   -->
+<!--      from the same directory that the Axis engine runs         -->
+
+<deployment
+    xmlns="http://xml.apache.org/axis/wsdd/"
+    xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+
+  <!-- Services from RpaWSSRpa WSDL service -->
+
+  <service name="RpaWSSRpaSoap" provider="java:RPC" style="wrapped" use="literal">
+      <parameter name="wsdlTargetNamespace" value="http://tempuri.org/"/>
+      <parameter name="wsdlServiceElement" value="RpaWSSRpa"/>
+      <parameter name="schemaQualified" value="http://tempuri.org/"/>
+      <parameter name="wsdlServicePort" value="RpaWSSRpaSoap"/>
+      <parameter name="className" value="it.saga.library.reportGeneratoreModelli.webservices.impl.RpaWSSRpa.RpaWSSRpaSoapSkeleton"/>
+      <parameter name="wsdlPortType" value="RpaWSSRpaSoap"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <parameter name="allowedMethods" value="*"/>
+      <parameter name="scope" value="Session"/>
+
+  </service>
+</deployment>

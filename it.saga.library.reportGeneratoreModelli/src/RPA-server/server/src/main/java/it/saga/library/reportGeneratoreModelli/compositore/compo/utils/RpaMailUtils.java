@@ -1,8 +1,6 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo.utils;
 
-import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -77,6 +75,7 @@ public class RpaMailUtils {
 	 * @param corpo        corpo/testo della email (In formato HTML o no)
 	 * @throws EmailException
 	 */
+	/*
 	public boolean sendEmail(final String mittente, final String destinatario, final String titolo, final boolean html, final String corpo) throws EmailException {
 		HtmlEmail email = new HtmlEmail();
 		email.setHostName(SMTP);
@@ -99,4 +98,5 @@ public class RpaMailUtils {
 
 		return result.isEmpty();
 	}
+	*/
 }

@@ -11,32 +11,9 @@ import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaI
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaMnemonicConversionException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaDataConversionContainer;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaNumberUtils;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormat;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatAInterval;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatAnn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatCapAllText;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatCapText;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatCnn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatD;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatEnn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatExtImg;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatFnn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatInn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatKmCippo;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatL;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatLInterval;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatLN;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatLowText;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatMoney;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatN;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatNn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatNumber;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatPnn;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatX;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatXImg;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatXParameter;
-import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.RpaFormatZnn;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.format.*;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.mnemonic.type.RpaAbstractMnemonic;
+import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.ChangeFormatAIntervalContext;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.ChangeFormatANumberContext;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.ChangeFormatCNumberContext;
@@ -61,6 +38,9 @@ import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainLowTextContext;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainCapTextContext;
 import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainCapAllTextContext;
+import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainUpperTextContext;
+import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainHashFileContext;
+import it.saga.library.reportGeneratoreModelli.compositore.generatedGrammarFiles.RpaParser.FormatDomainFindHashContext;
 import it.saga.library.reportGeneratoreModelli.compositore.interfaces.RpaImportExternalImageI;
 
 import java.sql.Connection;
@@ -897,7 +877,7 @@ public class RpaMnemonicConversionVisitor extends RpaMnemonicConversionDateVisit
         RpaDataConversionContainer  dataConversionContainer = mainCompositore.getDataConversionContainer();
         String                      value                   = dataConversionContainer.getFormattedValue();
 
-        // Formatto il valore a valuta
+        // Formatto il valore
         RpaFormat customValueFormat;
 
         try {
@@ -933,7 +913,7 @@ public class RpaMnemonicConversionVisitor extends RpaMnemonicConversionDateVisit
         RpaDataConversionContainer  dataConversionContainer = mainCompositore.getDataConversionContainer();
         String                      value                   = dataConversionContainer.getFormattedValue();
 
-        // Formatto il valore a valuta
+        // Formatto il valore
         RpaFormat customValueFormat;
 
         try {
@@ -947,6 +927,99 @@ public class RpaMnemonicConversionVisitor extends RpaMnemonicConversionDateVisit
             int applicationContext = RpaComposerException.COMPILE_MESSAGE;
 
             throw new RpaMnemonicConversionException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), applicationContext, code, message, RpaErrorType.CONVERSION_CAP_ALL_TEXT);
+
+        }
+
+        dataConversionContainer.setCustomValueFormat(customValueFormat);
+        dataConversionContainer.setType(RpaFormat.TYPE_STRING);
+
+        return new RpaValue<RpaFormat>(customValueFormat);
+
+    }
+
+    @Override
+    public RpaValue<RpaFormat> visitFormatDomainUpperText(FormatDomainUpperTextContext context) {
+
+        // Recupero il valore da convertire
+        RpaDataConversionContainer  dataConversionContainer = mainCompositore.getDataConversionContainer();
+        String                      value                   = dataConversionContainer.getFormattedValue();
+
+        // Formatto il valore
+        RpaFormat customValueFormat;
+
+        try {
+
+            customValueFormat = new RpaFormatUpperText(mainCompositore, value);
+
+        } catch (Exception exception) {
+
+            String code     = context.parent.getText();
+            String message  = "Impossibile rendere maiuscolo il testo '" + value + "'";
+            int applicationContext = RpaComposerException.COMPILE_MESSAGE;
+
+            throw new RpaMnemonicConversionException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), applicationContext, code, message, RpaErrorType.CONVERSION_UPPER_TEXT);
+
+        }
+
+        dataConversionContainer.setCustomValueFormat(customValueFormat);
+        dataConversionContainer.setType(RpaFormat.TYPE_STRING);
+
+        return new RpaValue<RpaFormat>(customValueFormat);
+
+    }
+
+    @Override
+    public RpaValue<RpaFormat> visitFormatDomainHashFile(FormatDomainHashFileContext context) {
+
+        // Recupero il valore da convertire
+        RpaDataConversionContainer  dataConversionContainer = mainCompositore.getDataConversionContainer();
+        String                      value                   = dataConversionContainer.getFormattedValue();
+
+        // Formatto il valore
+        RpaFormat customValueFormat;
+
+        try {
+
+            customValueFormat = new RpaFormatHashFile(mainCompositore, value);
+
+        } catch (Exception exception) {
+
+            String code     = context.parent.getText();
+            String message  = "Impossibile trovare il file '" + value + "' o file corrotto: " + exception.getMessage();
+            int applicationContext = RpaComposerException.COMPILE_MESSAGE;
+
+            throw new RpaMnemonicConversionException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), applicationContext, code, message, RpaErrorType.CONVERSION_FILE_HASH);
+
+        }
+
+        dataConversionContainer.setCustomValueFormat(customValueFormat);
+        dataConversionContainer.setType(RpaFormat.TYPE_STRING);
+
+        return new RpaValue<RpaFormat>(customValueFormat);
+
+    }
+
+    @Override
+    public RpaValue<RpaFormat> visitFormatDomainFindHash(FormatDomainFindHashContext context) {
+
+        // Recupero il valore da convertire
+        RpaDataConversionContainer  dataConversionContainer = mainCompositore.getDataConversionContainer();
+        String                      value                   = dataConversionContainer.getFormattedValue();
+
+        // Formatto il valore
+        RpaFormat customValueFormat;
+
+        try {
+
+            customValueFormat = new RpaFormatFindHash(mainCompositore, value);
+
+        } catch (Exception exception) {
+
+            String code     = context.parent.getText();
+            String message  = "Errore nel recupero dell'hash del file per id-documentale: '" + value + "'" + exception.getMessage();
+            int applicationContext = RpaComposerException.COMPILE_MESSAGE;
+
+            throw new RpaMnemonicConversionException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), applicationContext, code, message, RpaErrorType.CONVERSION_FIND_HASH);
 
         }
 

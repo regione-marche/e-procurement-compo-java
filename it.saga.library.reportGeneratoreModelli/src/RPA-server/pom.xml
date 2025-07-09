@@ -5,17 +5,17 @@
   <parent>
     <groupId>it.saga.library</groupId>
     <artifactId>reportGeneratoreModelli</artifactId>
-    <version>1.0.109.0000</version>
+    <version>3.0.14.0000</version>
     <relativePath>../../</relativePath>
   </parent>
   <groupId>it.saga.library</groupId>
   <artifactId>RPA-server</artifactId>
-  <version>1.0.109.0000</version>
+  <version>3.0.14.0000</version>
   <packaging>pom</packaging>
   <name>RPA-server</name>
   <modules>
     <module>server</module>
-    <!-- <module>setup</module> -->
+    <module>setup</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -243,11 +243,6 @@
       <artifactId>praticheEdilizie-server</artifactId>
     </dependency>
     <dependency>
-      <groupId>it.saga.extern.lib</groupId>
-      <artifactId>ldocp12</artifactId>
-      <type>pom</type>
-    </dependency>
-    <dependency>
       <groupId>it.saga.library</groupId>
       <artifactId>bonifiche-client</artifactId>
     </dependency>
@@ -274,6 +269,10 @@
     <dependency>
       <groupId>it.saga.library</groupId>
       <artifactId>search-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.saga.pubblici</groupId>
+      <artifactId>pratiche-client</artifactId>
     </dependency>
   </dependencies>
 </project>

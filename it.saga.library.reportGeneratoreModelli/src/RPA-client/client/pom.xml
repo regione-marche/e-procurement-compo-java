@@ -3,8 +3,7 @@
   <parent>
     <groupId>it.saga.library</groupId>
     <artifactId>RPA-client</artifactId>
-    <version>1.0.109.0000</version>
-    
+    <version>3.0.14.0000</version>    
   </parent>
   <groupId>it.saga.library</groupId>
   <artifactId>reportGeneratoreModelli-client</artifactId>

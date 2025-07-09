@@ -1,12 +1,16 @@
 package it.saga.library.reportGeneratoreModelli.compositore.compo;
 
+import it.saga.library.commonDataTypes.CdtHibernateSessionWrapper;
 import it.saga.library.reportGeneratoreModelli.compositore.interfaces.RpaImportExternalImageI;
+
+import java.sql.Connection;
 
 public class RpaComposerStartConfiguration {
 
     // Link: https://regex101.com/r/Nwc4xk/1
     private static final String FILE_PATH_CHECK_REGEX = "^(.+[\\\\\\/].+)\\.(.+)$";
 
+    private CdtHibernateSessionWrapper connection;
     private String dbmsName;
     private String dbDriver;
     private String dbConnectionUrl;
@@ -25,6 +29,8 @@ public class RpaComposerStartConfiguration {
     private Character               integerSeparator;
     private Long                    limitReadData;
     private RpaImportExternalImageI importExternalImage;
+    private Long                    limitMemorySize;
+    private boolean                 isForceUseDbParameters;
     //retrocompatibilià
     private String connectionString;
 
@@ -48,7 +54,9 @@ public class RpaComposerStartConfiguration {
         boolean isDebugMessageActive,
         boolean isWarningMessageActive,
         boolean isErrorMessageActive,
-        RpaImportExternalImageI importExternalImage
+        RpaImportExternalImageI importExternalImage,
+        Long    limitMemorySize,
+        boolean isForceUseDbParameters
     ) {
 
         this.dbmsName           = dbmsName;
@@ -67,7 +75,17 @@ public class RpaComposerStartConfiguration {
         this.isWarningMessageActive = isWarningMessageActive;
         this.isErrorMessageActive   = isErrorMessageActive;
         this.importExternalImage    = importExternalImage;
+        this.limitMemorySize        = limitMemorySize;
+        this.isForceUseDbParameters = isForceUseDbParameters;
 
+    }
+
+    public CdtHibernateSessionWrapper getConnection() {
+        return connection;
+    }
+
+    public void setConnection(CdtHibernateSessionWrapper connection) {
+        this.connection = connection;
     }
 
     public String getDBMSName() {
@@ -180,6 +198,14 @@ public class RpaComposerStartConfiguration {
 
     public void setLimitReadData(Long limitReadData) { this.limitReadData = limitReadData; }
 
+    public boolean isForceUseDbParameters() { return isForceUseDbParameters; }
+
+    public void setIsForceUseDbParameters(boolean isForceUseDbParameters) { isForceUseDbParameters = isForceUseDbParameters; }
+
     public RpaImportExternalImageI getImportExternalImage() { return importExternalImage; }
+
+    public Long getLimitMemorySize() { return limitMemorySize; }
+
+    public void setLimitMemorySize(Long limitMemorySize) { this.limitMemorySize = limitMemorySize; }
 
 }

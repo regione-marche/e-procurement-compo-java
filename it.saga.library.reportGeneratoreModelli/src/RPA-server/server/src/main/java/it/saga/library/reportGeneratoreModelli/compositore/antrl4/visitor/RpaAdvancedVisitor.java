@@ -7,8 +7,10 @@ import it.saga.library.reportGeneratoreModelli.compositore.antrl4.RpaValue;
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScope;
 import it.saga.library.reportGeneratoreModelli.compositore.antrl4.scope.RpaScopeJoin;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.RpaMainCompositore;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.codes.RpaWarningType;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaComposerException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaInvalidFormatException;
+import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaJoinFailException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.exceptions.RpaNoMnemonicEntityFoundException;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaMnemonicManager;
 import it.saga.library.reportGeneratoreModelli.compositore.compo.utils.RpaNumberUtils;
@@ -126,14 +128,55 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 
 		}
 
+		// Verifico se ho solo STR a "null" per la JOIN
+		boolean isEverySTRValueNull = false;
+
+		if (
+			isSetToNullMap != null && isSetToNullMap.size() == context.joinRightPart().joinValue().size() &&
+			!context.joinRightPart().joinValue().isEmpty()
+		) {
+
+			isEverySTRValueNull = true;
+
+			for (Map.Entry<Integer, Boolean> entryElementSetToNull: isSetToNullMap.entrySet()) {
+
+				boolean isJoinSTRValueIsNull = entryElementSetToNull.getValue();
+
+				if (!isJoinSTRValueIsNull) {
+
+					isEverySTRValueNull = false;
+					break;
+
+				}
+
+			}
+
+		}
+
+		// Se tutti i valori a destra sono NULL, lancio un warning
+		// Vedi: https://sviluppo.maggiolicloud.it/browse/SJPR-629
+		if (mnemonicNameList.isEmpty() || isEverySTRValueNull) {
+
+			String message =
+					context.getText() + ": TUTTI I VALORI A DESTRA " +
+					"SONO null OPPURE NON DEFINITI";
+
+			mainCompositore.getWarningMessages().print(RpaWarningType.JOIN_ON_NULL, message);
+
+		}
+
 		// Controllo che il numero di mnemonici e valori sia uguale
 		if (mnemonicNameList.size() != valueList.size()) {
 
 			int mnemonicCount	= mnemonicNameList.size();
 			int valueCount		= valueList.size();
 
-			throw new ParseCancellationException("[JOIN] Il numero di mnemonici (" + mnemonicCount + ") " +
-					"è diverso da quello dei valori (" + valueCount + ")");
+			String code				= context.getText();
+			String message			= "[JOIN] Il numero di mnemonici (" + mnemonicCount + ") " +
+					"è diverso da quello dei valori (" + valueCount + ")";
+			int errorContext		= RpaComposerException.COMPILE_MESSAGE;
+
+			throw new RpaJoinFailException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
 
 		}
 
@@ -147,7 +190,7 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 
 			if (mnemonicEntityLabel == null || mnemonicEntityLabel.isEmpty()) {
 
-				String code     	= mnemonicName;
+				String code     	= context.getText();
 				String message  	= "Nessuna entità trovata nel c0entit per il mnemonico " + mnemonicName;
 				int errorContext   	= RpaComposerException.COMPILE_MESSAGE;
 
@@ -159,8 +202,12 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 
 			if (mnemonicEntityName == null || mnemonicEntityName.isEmpty()) {
 
-				throw new ParseCancellationException("[JOIN] Impossibile trovare l'entità " +
-						"per il mnemonico " + mnemonicName);
+				String code			= context.getText();
+				String message		= "[JOIN] Impossibile trovare l'entità " +
+						"per il mnemonico " + mnemonicName;
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaJoinFailException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
 
 			}
 
@@ -171,8 +218,12 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 
 			} else if (!lastMnemonicEntityName.equals(mnemonicEntityName)) {
 
-				throw new ParseCancellationException("[JOIN] Tutti i mnemonici di sinistra " +
-						"devono appartenere alla stessa entità");
+				String code			= context.getText();
+				String message		= "[JOIN] Tutti i mnemonici di sinistra " +
+						"devono appartenere alla stessa entità";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaJoinFailException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
 
 			}
 
@@ -182,7 +233,31 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 		// estraggo l'entità dell'ultimo mnemonico che ho letto
 		if (mnemonicNameList.isEmpty()) {
 
+			// Se non ho trovato riferimenti, significa che il valore di destra risulta sempre null
+			// e lancio un errore (per ogni valore non definito)
+			// Vedi: https://sviluppo.maggiolicloud.it/browse/SJPR-629
+			if (lastMnemonicName == null) {
+
+				String code			= context.getText();
+				String message		= "[JOIN] I valori a destra della join sono nulli / non definiti";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaJoinFailException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
+
+			}
+
 			lastMnemonicEntityLabel	= mnemonicManager.translateMnemonicName(lastMnemonicName);
+
+			if (lastMnemonicEntityLabel == null || lastMnemonicEntityLabel.split("\\.").length < 3) {
+
+				String code			= context.getText();
+				String message		= "[JOIN] I valori a destra della join sono nulli / non definiti";
+				int errorContext	= RpaComposerException.COMPILE_MESSAGE;
+
+				throw new RpaJoinFailException(mainCompositore.getComposerConfiguration(), mainCompositore.getAntlrErrorListener(), errorContext, code, message);
+
+			}
+
 			lastMnemonicEntityName	= lastMnemonicEntityLabel.split("\\.")[1];
 
 		}
@@ -212,6 +287,10 @@ public abstract class RpaAdvancedVisitor extends RpaLoopVisitor {
 					lastMnemonicEntityName,
 					mnemonicEntityData
 			);
+
+		} catch (RpaComposerException composerException) {
+
+			throw composerException;
 
 		} catch (Exception exception) {
 
